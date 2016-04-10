@@ -1,0 +1,5 @@
+/home/chengzhu/work/temp/diar_ami_dir/IS1000b.0.segments.txt
+/home/chengzhu/work/temp/diar_ami_dir/IS1000b.1.segments.txt
+/home/chengzhu/work/temp/diar_ami_dir/IS1000b.2.segments.txt
+/home/chengzhu/work/temp/diar_ami_dir/IS1000b.3.segments.txt
+/home/chengzhu/work/temp/diar_ami_dir/IS1000b.Mix-Headset.wav

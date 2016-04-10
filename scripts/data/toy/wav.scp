@@ -1,0 +1,1 @@
+IS1000b.Mix-Headset sox --ignore-length /home/chengzhu/work/temp/diar_ami_dir/IS1000b.Mix-Headset.wav -t wav - |
