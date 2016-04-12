@@ -1,11 +1,11 @@
 // diarbin/changeDetectBIC.cc
 
 #include "util/common-utils.h"
-
+#include "diar/diar-utils.h"
 
 int main(int argc, char *argv[]) {
 	typedef kaldi::int32 int32;
-	typedef std::vector< <std::string, std::vector<int> > > segType;
+	
 	using namespace kaldi;
 
 	const char *usage = "Detect Change Point In Speech Segments With BIC \n";
@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
 
     SequentialBaseFloatMatrixReader feature_reader(feature_rspecifier);
     SequentialBaseFloatMatrixReader label_reader(label_rspecifier);
+    SequentialBaseFloatMatrixWriter label_writter(label_wspecifier);
 
     for (; !feature_reader.Done(); feature_reader.Next()) {
 
@@ -35,9 +36,23 @@ int main(int argc, char *argv[]) {
 
     	segType segments;
 
-    	label2segments(label_reader.Value(), &segments);
+    	LabelsToSegments(label_reader.Value(), &segments);
+
+    	segType bicSegments;
+
+    	for(int i=0; i<segments.size(); i++){
+
+    		if (segments[i].first == 'nonspeech'){
+    			bicSegments.push_back(segments[i]);
+    		} else if (segments[i].key() == 'speech'){
+    			BicSegmentation(segments[i], &bicSegments);    			
+    		} else{
+    			KALDI_ERROR << "Unknown label. Only speech/nonspeech are acceptable.";
+    		}
+    	}
+
+    	SegmentsToLabels(&bicSegments, &label_writter);
 
     }
-
 
 }
