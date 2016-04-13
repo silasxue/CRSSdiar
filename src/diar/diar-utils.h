@@ -6,9 +6,14 @@ typedef std::vector< std::pair<std::string, std::vector<int32> > > segType;
 
 class Diarzation{
 public:
-	void LabelsToSegments(std::vector<BaseFloat> labels, segType* segments);
-	void SegmentsToLabels(segType* segments, std::vector<BaseFloat> labels);
+	void LabelsToSegments(const std::vector<int32>& labels, segType& segments);
+	void SegmentsToLabels(const segType& segments, std::vector<int32>& labels);
 	void BicSegmentation(std::vector<int32> segment, Matrix<BaseFloat>& feats, segType* bicsegments);    			
+
+
+	int minBicWindowLength = 500; // msec 
+	int BicWindowIncrement = 500; // msec
+
 }; 
 
 

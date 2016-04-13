@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 
     		if (segments[i].first == 'nonspeech'){
     			bicSegments.push_back(std::make_pair("nonspeech",segments[i]));
-    		} else if (segments[i].key() == 'speech'){
+    		} else if (segments[i].first == 'speech'){
     			BicSegmentation(segments[i], &bicSegments);    			
     		} else{
     			KALDI_ERROR << "Unknown label. Only speech/nonspeech are acceptable.";
