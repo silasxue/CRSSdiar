@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     	for(int i=0; i<segments.size(); i++){
 
     		if (segments[i].first == 'nonspeech'){
-    			bicSegments.push_back(segments[i]);
+    			bicSegments.push_back(std::make_pair("nonspeech",segments[i]));
     		} else if (segments[i].key() == 'speech'){
     			BicSegmentation(segments[i], &bicSegments);    			
     		} else{
