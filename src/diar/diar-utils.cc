@@ -1,3 +1,4 @@
+#include <iostream>
 #include "diar-utils.h"
 
 
@@ -36,24 +37,29 @@ void Diarization::LabelsToSegments(const Vector<BaseFloat>& labels, segType& seg
 		state = labels(i);
 		prevState = labels(i-1);
 		if (state != prevState || i==labels.Dim()-1) {
+			if (i==labels.Dim()-1) {
+				i++;
+			}
+
 			switch (prevState) {
 				case 0:
-					segmentStartEnd[2] = i-1;
+					segmentStartEnd[1] = i-1;
 					segments.push_back(std::make_pair("nonspeech",segmentStartEnd));
-					segmentStartEnd[1] = i;
+					segmentStartEnd[0] = i;
 					break;
 				case 1:
-					segmentStartEnd[2] = i-1;
+					segmentStartEnd[1] = i-1;
 					segments.push_back(std::make_pair("speech",segmentStartEnd));
-					segmentStartEnd[1] = i;
+					segmentStartEnd[0] = i;
 					break;
 				case -1:
-					segmentStartEnd[2] = i-1;
+					segmentStartEnd[1] = i-1;
 					segments.push_back(std::make_pair("overlap",segmentStartEnd));
-					segmentStartEnd[1] = i;
+					segmentStartEnd[0] = i;
 					break;
 			}
 		}
+
 	}
 }
 

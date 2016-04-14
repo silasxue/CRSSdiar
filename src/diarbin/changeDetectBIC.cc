@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 
     SequentialBaseFloatMatrixReader feature_reader(feature_rspecifier);
     SequentialBaseFloatVectorReader label_reader(label_rspecifier);
-    Int32VectorWriter label_writter(label_wspecifier);
+    BaseFloatVectorWriter label_writer(label_wspecifier);
 
     Diarization diarObj;
 
@@ -39,25 +39,30 @@ int main(int argc, char *argv[]) {
     	}
 
     	segType segments; // Speech/Nonspeech/Overlap segmentations
+        Vector<BaseFloat> outLabels;
 
         //const Matrix<BaseFloat> &mat = feature_reader.Value();
         //const Matrix<BaseFloat> &labelVector = label_reader.Value();
-    	diarObj.LabelsToSegments(label_reader.Value(), segments);        
+        diarObj.LabelsToSegments(label_reader.Value(), segments); 
+        diarObj.SegmentsToLabels(segments, outLabels);        
+
 
     	segType bicSegments; // Segmentations after bic change detection
 
-    	for(int i=0; i<segments.size(); i++){
+    	// for(int i=0; i<segments.size(); i++){
 
-    		if (segments[i].first == "nonspeech"){
-    			bicSegments.push_back(std::make_pair("nonspeech",segments[i].second));
-    		} else if (segments[i].first == "speech"){
-    			// diarObj.BicSegmentation(segments[i].second, mat, bicSegments);    			
-    		} else{
-    			KALDI_ERR << "Unknown label. Only speech/nonspeech are acceptable.";
-    		}
-    	}
+    	// 	if (segments[i].first == "nonspeech"){
+    	// 		bicSegments.push_back(std::make_pair("nonspeech",segments[i].second));
+    	// 	} else if (segments[i].first == "speech"){
+    	// 		// diarObj.BicSegmentation(segments[i].second, mat, bicSegments);    			
+    	// 	} else{
+    	// 		KALDI_ERR << "Unknown label. Only speech/nonspeech are acceptable.";
+    	// 	}
+    	// }
 
     	//SegmentsToLabels(&bicSegments, label_writter);
+
+        label_writer.Write(key, outLabels);
 
         label_reader.Next();
 
