@@ -1,6 +1,7 @@
 // diarbin/changeDetectBIC.cc
 
 #include "util/common-utils.h"
+#include "base/kaldi-common.h"
 #include "diar/diar-utils.h"
 
 int main(int argc, char *argv[]) {
@@ -10,6 +11,7 @@ int main(int argc, char *argv[]) {
 
 	const char *usage = "Detect Change Point In Speech Segments With BIC \n";
 
+    kaldi::ParseOptions po(usage);
 	po.Read(argc, argv);
 
 	if (po.NumArgs() != 3) {
@@ -23,35 +25,41 @@ int main(int argc, char *argv[]) {
 
 
     SequentialBaseFloatMatrixReader feature_reader(feature_rspecifier);
-    SequentialBaseFloatMatrixReader label_reader(label_rspecifier);
-    SequentialBaseFloatMatrixWriter label_writter(label_wspecifier);
+    SequentialBaseFloatVectorReader label_reader(label_rspecifier);
+    Int32VectorWriter label_writter(label_wspecifier);
+
+    Diarization diarObj;
 
     for (; !feature_reader.Done(); feature_reader.Next()) {
 
     	std::string key = feature_reader.Key();
 
     	if(label_reader.Key() != key){
-    		KALDI_ERROR << "Feature and label mismatch";
+    		KALDI_ERR << "Feature and label mismatch";
     	}
 
-    	segType segments;
+    	segType segments; // Speech/Nonspeech/Overlap segmentations
 
-    	LabelsToSegments(label_reader.Value(), &segments);
+        //const Matrix<BaseFloat> &mat = feature_reader.Value();
+        //const Matrix<BaseFloat> &labelVector = label_reader.Value();
+    	diarObj.LabelsToSegments(label_reader.Value(), segments);        
 
-    	segType bicSegments;
+    	segType bicSegments; // Segmentations after bic change detection
 
     	for(int i=0; i<segments.size(); i++){
 
-    		if (segments[i].first == 'nonspeech'){
-    			bicSegments.push_back(std::make_pair("nonspeech",segments[i]));
-    		} else if (segments[i].first == 'speech'){
-    			BicSegmentation(segments[i], &bicSegments);    			
+    		if (segments[i].first == "nonspeech"){
+    			bicSegments.push_back(std::make_pair("nonspeech",segments[i].second));
+    		} else if (segments[i].first == "speech"){
+    			// diarObj.BicSegmentation(segments[i].second, mat, bicSegments);    			
     		} else{
-    			KALDI_ERROR << "Unknown label. Only speech/nonspeech are acceptable.";
+    			KALDI_ERR << "Unknown label. Only speech/nonspeech are acceptable.";
     		}
     	}
 
-    	SegmentsToLabels(&bicSegments, &label_writter);
+    	//SegmentsToLabels(&bicSegments, label_writter);
+
+        label_reader.Next();
 
     }
 

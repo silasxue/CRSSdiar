@@ -1,8 +1,8 @@
-#include <diar-utils.h>
+#include "diar-utils.h"
 
 
 namespace kaldi {
-void Diarization::BicSegmentation(std::vector<int32> segment, Matrix<BaseFloat>& feats, segType* bicsegments) {
+//void Diarization::BicSegmentation(std::vector<int32> segment, Matrix<BaseFloat>& feats, segType* bicsegments) {
 	/*
 	For a given segment/break-point, calculate 3 GMMs. Z: X V Y. 
 	The break-point c partitions Z into X and Y. 
@@ -17,10 +17,10 @@ void Diarization::BicSegmentation(std::vector<int32> segment, Matrix<BaseFloat>&
 	// 	bicsegments.push_back(std::make_pair())
 	// }
 
-}
+//}
 
 
-void Diarization::LabelsToSegments(const std::vector<int32>& labels, segType& segments){
+void Diarization::LabelsToSegments(const Vector<BaseFloat>& labels, segType& segments) {
 	// NOTE: At this stage we only consider the case were labels includes VAD 
 	// and/or overlap marks (spch:1, nonspch:0, overlap:-1). 
 	// Other conditions may be added in the future. 
@@ -32,10 +32,10 @@ void Diarization::LabelsToSegments(const std::vector<int32>& labels, segType& se
 	int endSeg = 0;
 	segmentStartEnd.push_back(startSeg);
 	segmentStartEnd.push_back(endSeg);
-	for (size_t i=1; i<labels.size(); i++) {
-		state = labels[i];
-		prevState = labels[i-1];
-		if (state != prevState || i==labels.size()-1) {
+	for (size_t i=1; i<labels.Dim(); i++) {
+		state = labels(i);
+		prevState = labels(i-1);
+		if (state != prevState || i==labels.Dim()-1) {
 			switch (prevState) {
 				case 0:
 					segmentStartEnd[2] = i-1;
@@ -58,7 +58,7 @@ void Diarization::LabelsToSegments(const std::vector<int32>& labels, segType& se
 }
 
 
-void Diarization::SegmentsToLabels(const segType& segments, std::vector<int32>& labels){
+//void Diarization::SegmentsToLabels(const segType& segments, std::vector<int32>& labels){
 	// NOTE: At this stage we only consider the case were labels includes VAD 
 	// and/or overlap marks (spch:1, nonspch:0, overlap:-1). 
 	// Other conditions may be added in the future. 
@@ -70,7 +70,7 @@ void Diarization::SegmentsToLabels(const segType& segments, std::vector<int32>& 
 				
 	// 	}
 	// }
-}
+//}
 
 
 }
