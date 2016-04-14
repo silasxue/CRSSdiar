@@ -58,19 +58,26 @@ void Diarization::LabelsToSegments(const Vector<BaseFloat>& labels, segType& seg
 }
 
 
-//void Diarization::SegmentsToLabels(const segType& segments, std::vector<int32>& labels){
-	// NOTE: At this stage we only consider the case were labels includes VAD 
-	// and/or overlap marks (spch:1, nonspch:0, overlap:-1). 
-	// Other conditions may be added in the future. 
+void Diarization::SegmentsToLabels(const segType& segments, Vector<BaseFloat>& labels){
+	//NOTE: At this stage we only consider the case were labels includes VAD 
+	//and/or overlap marks (spch:1, nonspch:0, overlap:-1). 
+	//Other conditions may be added in the future. 
 
-	// for (size_t i=0; i<segments.size(); i++) {
-	// 	std::vector segLabels;
-	// 	switch (segments[i].first) {
-	// 		case "speech":
-				
-	// 	}
-	// }
-//}
+	std::vector<int32> lastSegment = segments.back().second;
+	labels.Resize(lastSegment[1]+1);
+	for (size_t i=0; i<segments.size(); i++) {
+		
+		std::vector<int32> segmentStartEnd = segments[i].second;
+		int32 segLen = segmentStartEnd[1] - segmentStartEnd[0] + 1;
+		Vector<BaseFloat> segLabels(segLen);		
+
+		if (segments[i].first == "speech") segLabels.Set(1.0);
+		if (segments[i].first == "nonspeech") segLabels.Set(0.0);
+		if (segments[i].first == "overlap") segLabels.Set(-1.0);
+
+		labels.Range(segmentStartEnd[0],segLen).CopyFromVec(segLabels);
+	}
+}
 
 
 }

@@ -8,7 +8,7 @@ typedef std::vector< std::pair<std::string, std::vector<int32> > > segType;
 class Diarization{
 public:
 	void LabelsToSegments(const Vector<BaseFloat>& labels, segType& segments);
-	//void SegmentsToLabels(const segType& segments, Vector<int32>& labels);
+	void SegmentsToLabels(const segType& segments, Vector<BaseFloat>& labels);
 	//void BicSegmentation(std::vector<int32> &segment, const Matrix<BaseFloat>& feats, segType& bicsegments);    			
 
 //Diarization::LabelsToSegments(const T&, kaldi::segType&)
