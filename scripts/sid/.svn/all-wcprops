@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/p/kaldi/code/!svn/ver/4807/trunk/egs/sre08/v1/sid
+END
+extract_ivectors.sh
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/p/kaldi/code/!svn/ver/4568/trunk/egs/sre08/v1/sid/extract_ivectors.sh
+END
+gender_id.sh
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/p/kaldi/code/!svn/ver/4568/trunk/egs/sre08/v1/sid/gender_id.sh
+END
+train_full_ubm.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/p/kaldi/code/!svn/ver/4568/trunk/egs/sre08/v1/sid/train_full_ubm.sh
+END
+compute_vad_decision.sh
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/p/kaldi/code/!svn/ver/3319/trunk/egs/sre08/v1/sid/compute_vad_decision.sh
+END
+train_ivector_extractor.sh
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/p/kaldi/code/!svn/ver/4568/trunk/egs/sre08/v1/sid/train_ivector_extractor.sh
+END
+train_diag_ubm.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/p/kaldi/code/!svn/ver/4568/trunk/egs/sre08/v1/sid/train_diag_ubm.sh
+END

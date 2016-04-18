@@ -3,10 +3,12 @@ import sys
 import numpy as np
 import commands 
 import pylab 
+import os
 
-# python seg2frame.py scpfile 0/1
+# python seg2frame.py scpfile outfile 0/1 
 # scpfile include (segmentfilenames + wavfilename)
 # 0 for not plot; 1 for plot
+# outfile: destination to write as kaldi ark format
 
 def time2frame(s,e,inc):
     s_f = int(s/inc)
@@ -18,8 +20,10 @@ if __name__=='__main__':
     inc = 0.01
     win = 0.025
     filename = sys.argv[1]
-    PLOT = int(sys.argv[2])
+    filenameOutput = sys.argv[2]
+    PLOT = int(sys.argv[3])
     fin = open(filename)
+    fout = open(filenameOutput,'w')
     session_txt = []
     session_wav = []
     for i in fin:
@@ -69,3 +73,11 @@ if __name__=='__main__':
     if PLOT == 1:
         pylab.plot(labels)
         pylab.show()
+    
+    uttid = os.path.splitext(os.path.basename(session_wav[0]))[0]
+    fout.write(uttid);
+    fout.write("  [ ")
+    labels.tofile(fout, " ", format="%i")
+    fout.write(" ]")
+    fout.write("\n")
+    fout.close()

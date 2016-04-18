@@ -1,3 +1,6 @@
+#ifndef KALDI_IVECTOR_DIAR_UTILS_H_
+#define KALDI_IVECTOR_DIAR_UTILS_H_
+
 #include <vector>
 #include "util/common-utils.h"
 #include "matrix/matrix-lib.h"
@@ -21,3 +24,5 @@ public:
 
 
 }
+
+#endif
