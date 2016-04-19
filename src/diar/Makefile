@@ -1,7 +1,7 @@
 
 all:
 
-KALDI_DIR = /home/chengzhu/work/Toolhouse/kaldi-trunk
+KALDI_DIR = /home/nxs113020/kaldi-trunk
 OPENFST_CXXFLAGS = 
 OPENFST_LDLIBS = 
 EXTRA_CXXFLAGS = -I${KALDI_DIR}/src

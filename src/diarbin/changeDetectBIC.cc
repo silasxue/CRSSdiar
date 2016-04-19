@@ -1,5 +1,7 @@
 // diarbin/changeDetectBIC.cc
 
+#include <vector>
+#include <iostream>
 #include "util/common-utils.h"
 #include "base/kaldi-common.h"
 #include "diar/diar-utils.h"
@@ -39,30 +41,32 @@ int main(int argc, char *argv[]) {
     	}
 
     	segType segments; // Speech/Nonspeech/Overlap segmentations
-        Vector<BaseFloat> outLabels;
+        
 
-        //const Matrix<BaseFloat> &mat = feature_reader.Value();
-        //const Matrix<BaseFloat> &labelVector = label_reader.Value();
+        const Matrix<BaseFloat> &mat = feature_reader.Value();
         diarObj.LabelsToSegments(label_reader.Value(), segments); 
-        diarObj.SegmentsToLabels(segments, outLabels);        
+        //diarObj.SegmentsToLabels(segments, outLabels);        
 
 
     	segType bicSegments; // Segmentations after bic change detection
 
-    	// for(int i=0; i<segments.size(); i++){
+    	for(size_t i=0; i<segments.size(); i++){
 
-    	// 	if (segments[i].first == "nonspeech"){
-    	// 		bicSegments.push_back(std::make_pair("nonspeech",segments[i].second));
-    	// 	} else if (segments[i].first == "speech"){
-    	// 		// diarObj.BicSegmentation(segments[i].second, mat, bicSegments);    			
-    	// 	} else{
-    	// 		KALDI_ERR << "Unknown label. Only speech/nonspeech are acceptable.";
-    	// 	}
-    	// }
+    		if (segments[i].first == "nonspeech"){
+    			bicSegments.push_back(std::make_pair("nonspeech",segments[i].second));
+    		}else if (segments[i].first == "overlap"){
+    			bicSegments.push_back(std::make_pair("overlap",segments[i].second));
+            }else {
+                bool foundSegments; 
+                foundSegments = diarObj.BicSegmentation(segments[i].second, mat, bicSegments);
+                //std::cout << foundSegments << std::endl;
+    		}
+    	}
 
-    	//SegmentsToLabels(&bicSegments, label_writter);
-
+        Vector<BaseFloat> outLabels;
+        diarObj.SegmentsToLabels(bicSegments, outLabels);
         label_writer.Write(key, outLabels);
+        
 
         label_reader.Next();
 
