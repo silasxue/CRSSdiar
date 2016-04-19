@@ -11,15 +11,15 @@ typedef std::vector< std::pair<std::string, std::vector<int32> > > segType;
 class Diarization{
 public:
 	Diarization(){
-			Nmin = 100,
-			Nmax = 300;
+			Nmin = 500,
+			Nmax = 2000;
 			Nsecond = 100;
-			Nshift = 50;
-			Nmargin = 40;
-			Ngrow = 50;
-			lambda = 0.1;
-			lowResolution = 4;
-			highResolution = 1;
+			Nshift = 200;
+			Nmargin = 100;
+			Ngrow = 100;
+			lambda = 0.01;
+			lowResolution = 25;
+			highResolution = 5;
 	}
 	void LabelsToSegments(const Vector<BaseFloat>&, segType&);
 	void SegmentsToLabels(const segType&, Vector<BaseFloat>&);

@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
             }else {
                 bool foundSegments; 
                 foundSegments = diarObj.BicSegmentation(segments[i].second, mat, bicSegments);
-                std::cout << foundSegments << std::endl;
+                //std::cout << foundSegments << std::endl;
     		}
     	}
 

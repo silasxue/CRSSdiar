@@ -15,7 +15,7 @@ bool Diarization::BicSegmentation(std::vector<int32>& segment, const Matrix<Base
 	int32 startOfDetectedSegment = segment[0];
 	int32 segmentLength = endStream - startStream;
 	if (Nmin >= segmentLength) {
-		bicsegments.push_back(std::make_pair("speech",segment));
+		bicsegments.push_back(std::make_pair("1",segment));
 		return false;
 	}
 
@@ -23,6 +23,7 @@ bool Diarization::BicSegmentation(std::vector<int32>& segment, const Matrix<Base
 	std::pair<int32, BaseFloat> maxBICIndexValue;
 	while (window[1] <= endStream) {
 		maxBICIndexValue = computeBIC(window, feats, lowResolution);
+
 
 		while (maxBICIndexValue.second <= 0 && ((window[1] - window[0]) < Nmax) && window[1] <= endStream) {
 			growWindow(window,Ngrow);
@@ -42,7 +43,7 @@ bool Diarization::BicSegmentation(std::vector<int32>& segment, const Matrix<Base
 				std::vector<int32> detectedSegment;
 				detectedSegment.push_back(startOfDetectedSegment);
 				detectedSegment.push_back(endOfDetectedSegment);
-				bicsegments.push_back(std::make_pair("speech",detectedSegment));
+				bicsegments.push_back(std::make_pair("1",detectedSegment));
 				startOfDetectedSegment = endOfDetectedSegment + 1;
 				window = initWindow(startOfDetectedSegment, Nmin);
 			} else {
@@ -53,29 +54,29 @@ bool Diarization::BicSegmentation(std::vector<int32>& segment, const Matrix<Base
 	std::vector<int32> lastSegment;
 	lastSegment.push_back(startOfDetectedSegment);
 	lastSegment.push_back(endStream);
-	bicsegments.push_back(std::make_pair("speech",lastSegment));
+	bicsegments.push_back(std::make_pair("1",lastSegment));
 	return true;
 }
 
 std::pair<int32, BaseFloat> Diarization::computeBIC(const std::vector<int32>& win, const Matrix<BaseFloat>& features, int32 resolution) {
 	std::vector<BaseFloat> deltaBIC;
-	int32 N = win.size();
+	int32 N = win[1] - win[0];
 	int32 d = features.NumCols(); // d: feature dimension 
 	BaseFloat P = 0.5*(d + 0.5*(d*(d+1.)))*log(N);
-	Matrix<BaseFloat> segmentFeatures(win[1] - win[0] +1, d);
-	segmentFeatures.CopyFromMat(features.Range(win[0], win[1] - win[0] +1, 0, d));
+	Matrix<BaseFloat> segmentFeatures(N, d);
+	segmentFeatures.CopyFromMat(features.Range(win[0], N, 0, d));
 
 	BaseFloat sigma = detCovariance(segmentFeatures);
-	for (size_t i = Nmargin + 1; i < win[1] - Nmargin; i = i + resolution) {
-		Matrix<BaseFloat> feat1(i - win[0] +1, d);
-		feat1.CopyFromMat(segmentFeatures.Range(win[0], i - win[0] +1, 0, d));
+	for (size_t i = win[0] + Nmargin; i < win[1] - Nmargin; i = i + resolution) {
+		Matrix<BaseFloat> feat1(i - win[0], d);
+		feat1.CopyFromMat(features.Range(win[0], i - win[0], 0, d));
 		Matrix<BaseFloat> feat2(win[1] - i, d);
-		feat2.CopyFromMat(segmentFeatures.Range(i, win[1] - i, 0, d));
-
-		 BaseFloat sigma1 = detCovariance(feat1);
-		 BaseFloat sigma2 = detCovariance(feat2);
-		 deltaBIC.push_back(0.5*(N*log(sigma) - i*log(sigma1) - (N - i)*log(sigma2)) - lambda*P);
+		feat2.CopyFromMat(features.Range(i, win[1] - i, 0, d));
+		BaseFloat sigma1 = detCovariance(feat1);
+		BaseFloat sigma2 = detCovariance(feat2);
+		deltaBIC.push_back(0.5*(N*log(sigma) - i*log(sigma1) - (N - i)*log(sigma2)) - lambda*P);
 	}
+
 
 	// find maximum deltaBIC:
 	std::pair<int32, BaseFloat> bicOutput;
@@ -92,7 +93,8 @@ BaseFloat Diarization::detCovariance(Matrix<BaseFloat>& data) {
 	// determinant, assuming a diagonal covariance matrix.
 	int32 numFrames = data.NumRows();
 	int32 dim = data.NumCols();
-	Vector<BaseFloat> meanVec(dim), covVec; 
+
+	Vector<BaseFloat> meanVec(dim), covVec(dim); 
 	for (size_t i = 0; i < numFrames; i++) {
 		meanVec.AddVec(1./numFrames,data.Row(i));
 		covVec.AddVec2(1./numFrames,data.Row(i));
