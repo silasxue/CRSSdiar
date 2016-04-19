@@ -46,7 +46,7 @@ test_l2s(){
 #test_l2s
 
 test_changedetection() {
-    changeDetectBIC scp:data/toy/feats.scp ark:exp/vad/vad_toy.1.ark ark,scp,t:./tmp.ark,./tmp.scp
+    changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
 }
 test_changedetection
 

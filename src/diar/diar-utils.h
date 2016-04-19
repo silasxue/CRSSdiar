@@ -11,13 +11,13 @@ typedef std::vector< std::pair<std::string, std::vector<int32> > > segType;
 class Diarization{
 public:
 	Diarization(){
-			Nmin = 500,
+			Nmin = 300,
 			Nmax = 2000;
-			Nsecond = 100;
+			Nsecond = 300;
 			Nshift = 200;
 			Nmargin = 100;
 			Ngrow = 100;
-			lambda = 0.01;
+			lambda = 1.25;
 			lowResolution = 25;
 			highResolution = 5;
 	}
