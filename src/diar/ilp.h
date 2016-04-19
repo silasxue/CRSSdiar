@@ -2,6 +2,7 @@
 #define KALDI_IVECTOR_DIAR_ILP_H_
 
 #include <vector>
+#include <string>
 #include "base/kaldi-common.h"
 #include "matrix/matrix-lib.h"
 #include "util/common-utils.h"
@@ -24,10 +25,12 @@ public:
 	// extract ivector for a segment
 	void GetSegmentIvector(const Matrix<BaseFloat>&, const Posterior&, const IvectorExtractor&, DoubleVectorWriter&, const std::string, const std::vector<int32>&);
 
+	// create unique key of given segment, such that the key is format of "uttid_segStartFrame_segEndFrame"
+	void makeSegKey( const std::vector<int32>& segStartEnd, const std::string uttid, std::string& segIvectorKey );
+
 };
 
-
-
 }
+
 
 #endif 

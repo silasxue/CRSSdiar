@@ -1,4 +1,6 @@
 #include <vector>
+#include <string>
+#include <sstream>
 #include <algorithm>
 #include "ilp.h"
 
@@ -86,6 +88,20 @@ namespace kaldi{
 
 		ivectorWriter.Write(key, ivector);
 
+	}
+
+	void IlpCluster::makeSegKey( const std::vector<int32>& segmentStartEnd, const std::string uttid, std::string& segIvectorKey ){ 
+		// Make unique key for each segment of each utterance, by concatenating uttid with segment start and end
+		// Such that the key is format of "uttid_segStartFrame_segEndFrame".
+
+	    std::string segStartEndString;
+	    std::stringstream tmp; 
+	    tmp << segmentStartEnd[0];
+	    tmp << "_";
+	    tmp << segmentStartEnd[1];
+	    segStartEndString = tmp.str();
+
+	    segIvectorKey = uttid + "_" + segStartEndString;       
 	}
 
 

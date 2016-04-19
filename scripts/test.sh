@@ -46,10 +46,13 @@ test_l2s(){
 #test_l2s
 
 test_segIvector(){
-    
-    sid/test_seg_ivector.sh --nj 1 exp/extractor_2048 data/toy local/label.ark exp/test_seg_ivector	    		
 
+    #sid/test_seg_ivector.sh --nj 1 exp/extractor_2048 data/toy local/label.ark exp/test_seg_ivector
+    ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- | ivector-normalize-length ark:- ark:- | ivectorTest ark:- ark:local/label.ark 	    		
+    #ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- |  ivectorTest ark:- ark:local/label.ark 	    		
 }
 test_segIvector
+
+
 
 
