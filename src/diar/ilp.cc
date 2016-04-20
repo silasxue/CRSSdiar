@@ -1,3 +1,5 @@
+#include <fstream>
+#include <iostream>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -98,17 +100,17 @@ namespace kaldi{
 					distMatrix(i,j) = 0;
 				}else{
 					// distmatrix(i,j) = ivectorMahalanobisDistance(ivectorCollect[i], ivectorCollect[j]);
-					distmatrix(i,j) = 1 - ivectorCosineDistance(ivectorCollect[i], ivectorCollect[j]);
+					distMatrix(i,j) = 1 - ivectorCosineDistance(ivectorCollect[i], ivectorCollect[j]);
 				}
 			}
 		}
 
 	}
 
-	BaseFloat IlpCluster::ivectorCosineDistance(Vector<double>& ivec1, Vector<double>& ivec2) {
+	BaseFloat IlpCluster::ivectorCosineDistance(const Vector<double>& ivec1, const Vector<double>& ivec2) {
 		 BaseFloat dotProduct = VecVec(ivec1, ivec2);
-		 BaseFloat norm1 = VecVec(ivec1, ivec1) + eps;
-		 BaseFloat norm2 = VecVec(ivec2, ivec2) + eps;
+		 BaseFloat norm1 = VecVec(ivec1, ivec1) + FLT_EPSILON;
+		 BaseFloat norm2 = VecVec(ivec2, ivec2) + FLT_EPSILON;
 
 		 return dotProduct / (sqrt(norm1)*sqrt(norm2));  
 	}
@@ -116,12 +118,12 @@ namespace kaldi{
 	void IlpCluster::glpkIlpProblem(const Matrix<BaseFloat>& distMatrix, std::vector<std::string>& ilpProblem) {
 
 		ilpProblem.push_back("Minimize");
-		ilpProblem.push_back(problemMinimize(distmatrix));
+		ilpProblem.push_back(problemMinimize(distMatrix));
 		ilpProblem.push_back("Subject To");
 		problemConstraintsColumnSum(distMatrix, ilpProblem);
-		problemConstraintsCenter(distmatrix, ilpProblem);
+		problemConstraintsCenter(distMatrix, ilpProblem);
 		ilpProblem.push_back("Binary");
-		listBinaryVariables(distmatrix, ilpProblem);
+		listBinaryVariables(distMatrix, ilpProblem);
 		ilpProblem.push_back("End");
 	}
 
@@ -132,12 +134,12 @@ namespace kaldi{
 			objective += " + " + indexToVarName("x",i,i);
 		}
 
-		for (size_t i = 0; i < distmatrix.NumRows(); i++) {
-			for (size_t j = 0; j < distmatrix.NumRows(); j++) {
+		for (size_t i = 0; i < distMatrix.NumRows(); i++) {
+			for (size_t j = 0; j < distMatrix.NumRows(); j++) {
 				if (i != j) {
 					BaseFloat d = distMatrix(i, j) / delta;
 					if ((d > 0) && (d <= 1)) {
-						objective += " + " + d + " " + indexToVarName("x",i,j);
+						objective += " + " + numberToStr(d) + " " + indexToVarName("x",i,j);
 					}
 				} 
 			}
@@ -148,7 +150,7 @@ namespace kaldi{
 
 	void IlpCluster::problemConstraintsColumnSum(const Matrix<BaseFloat>& distMatrix, std::vector<std::string>& ilpProblem) {
 		for (size_t i = 0; i < distMatrix.NumRows(); i++) {
-			std::string constraint = "C" + i + ": " + indexToVarName("x",i,i);
+			std::string constraint = "C" + numberToStr(i) + ": " + indexToVarName("x",i,i);
 			for (size_t j = 0; j < distMatrix.NumRows(); j++) {
 				if (i != j) {
 					BaseFloat d = distMatrix(i, j);
@@ -162,7 +164,7 @@ namespace kaldi{
 		}
 	}
 
-	void IlpCluster::problemConstraintsCenter(Matrix<BaseFloat>& distMatrix, std::vector<std::string>& ilpProblem) {
+	void IlpCluster::problemConstraintsCenter(const Matrix<BaseFloat>& distMatrix, std::vector<std::string>& ilpProblem) {
 		for (size_t i = 0; i < distMatrix.NumRows(); i++) {
 			for (size_t j = 0; j < distMatrix.NumRows(); j++) {
 				if (i != j) {
@@ -175,7 +177,7 @@ namespace kaldi{
 		}
 	}
 
-	void IlpCluster::listBinaryVariables(Matrix<BaseFloat> distMatrix, std::vector<std::string>& ilpProblem) {
+	void IlpCluster::listBinaryVariables(const Matrix<BaseFloat> distMatrix, std::vector<std::string>& ilpProblem) {
 		for (size_t i = 0; i < distMatrix.NumRows(); i++) {
 			for (size_t j = 0; j < distMatrix.NumRows(); j++) {
 				BaseFloat d = distMatrix(i,j);
@@ -188,17 +190,25 @@ namespace kaldi{
 
 	std::string IlpCluster::indexToVarName( std::string prefix, int32 i, int32 j) { 
 
-	    std::string varName;
-	    std::stringstream tmp;
-	    tmp << prefix;
-	    tmp << "_"; 
-	    tmp << i;
-	    tmp << "_";
-	    tmp << j;
-	    varName = tmp.str();
-
-	    return varName;
+	    return prefix + "_" + numberToStr(i) + "_" + numberToStr(j);
 	}
 
+	template<class T>
+	std::string IlpCluster::numberToStr(T number){
+	    std::stringstream tmpStream;
+	    tmpStream << number;
+	    return tmpStream.str();
+	}
 
+	void IlpCluster::Write(std::string outName, const std::vector<std::string>& ilpProblem){
+
+		std::ofstream fout;
+		fout.open(outName.c_str());
+		for (size_t i =0; i<ilpProblem.size(); i++){
+			fout << ilpProblem[i] << "\n";
+		}
+
+		fout.close();
+
+	}
 }

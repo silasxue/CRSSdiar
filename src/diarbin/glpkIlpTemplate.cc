@@ -1,6 +1,5 @@
 // diarbin/ivectorTest.cc
 
-#include <glpk.h>
 #include <vector>
 #include <string>
 #include "util/common-utils.h"
@@ -15,22 +14,23 @@ int main(int argc, char *argv[]) {
     typedef kaldi::int32 int32;
     using namespace kaldi;
 
-    const char *usage = "Ivector Test \n";
+    const char *usage = "Obtain glp ILP problem representation template \n";
 
     kaldi::ParseOptions po(usage);
     po.Read(argc, argv);
 
-    if (po.NumArgs() != 1) {
+    if (po.NumArgs() != 2) {
         po.PrintUsage();
         exit(1);
     }
 
     std::string ivector_rspecifier = po.GetArg(1),
+                ilpTemplateOutfile = po.GetArg(2);
 
     SequentialDoubleVectorReader ivector_reader(ivector_rspecifier);
 
     // create ilpCluster object
-    ilpCluster ilpObj;
+    IlpCluster ilpObj;
 
     // collect i-vectors from speech segments
     std::vector< Vector<double> > ivectorCollect;
@@ -46,7 +46,13 @@ int main(int argc, char *argv[]) {
     ilpObj.computIvectorDistMatrix(ivectorCollect, distMatrix, ivectorKeyList);
 
     // Generate glpk format ILP problem representation
-    vector<string> iplProblem;
+    std::vector<std::string> ilpProblem;
     ilpObj.glpkIlpProblem(distMatrix, ilpProblem);
 
+    // Write glpk format ILP problem template to text file
+    {
+        ilpObj.Write(ilpTemplateOutfile, ilpProblem);
+    }
+
+    KALDI_LOG << "Written ILP optimization problem template to " << ilpTemplateOutfile;
 }

@@ -48,7 +48,7 @@ test_l2s(){
 test_changedetection() {
     changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
 }
-test_changedetection
+#test_changedetection
 
 testsegIvector(){
     
@@ -57,6 +57,12 @@ testsegIvector(){
     #ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- |  ivectorTest ark:- ark:local/label.ark 	    		
 }
 #test_segIvector
+
+testGlpkTemplate(){
+   #glpkIlpTemplate ark:exp/test_seg_ivector/ivector.1.ark ./template.glp
+   glpsol --lp ./template.glp -o ./tmpout.sol
+}
+testGlpkTemplate
 
 
 
