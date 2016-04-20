@@ -12,11 +12,18 @@
 #include "diar-utils.h"
 
 namespace kaldi{
-typedef kaldi::int32 int32;
-BaseFloat eps = 1.0e-40;
 
+// The ILP clustering approach implemented in this file uses refers to the paper
+// [1] "Recent Improvements on ILP-based Clustering for Broadcast news speaker diarization",
+// by Gregor Dupuy, Sylvain Meignier, Paul Deleglise, Yannic Esteve
+
+typedef kaldi::int32 int32;
 class IlpCluster {
 public:
+
+	IlpCluster() { 
+		delta  = 0.5;
+	}
 
 	// extract ivectors for all nonspeech segments
 	void ExtractSegmentIvectors(const Matrix<BaseFloat>&, const segType& , const Posterior& , const IvectorExtractor&, DoubleVectorWriter&, const std::string);
@@ -37,9 +44,31 @@ public:
 	// double ivectorMahalanobisDistance(Vector<double>& , Vector<double>& );
 
 	// compute the cosine distance between two i-vectors
-	double ivectorCosineDistance(Vector<double>& , Vector<double>& );
+	BaseFloat ivectorCosineDistance(const Vector<double>& , const Vector<double>& );
 
-	BaseFloat delta = 0.5;
+	// write objective function of ILP in glpk format, refer to equation (2) in the paper [1]
+	std::string problemMinimize(const Matrix<BaseFloat>& );
+
+	// write constraint function for unique center assigment as in equation (2.3) in the paper[1]
+	void problemConstraintsColumnSum(const Matrix<BaseFloat>&, std::vector<std::string>&);
+
+	//  write constraint function as in equation (2.4) in the paper[1]
+	void problemConstraintsCenter(const Matrix<BaseFloat>&, std::vector<std::string>&);
+
+	// list all binary variables as in equation (2.2) in the paper [1]
+	void listBinaryVariables(const Matrix<BaseFloat>, std::vector<std::string>&);
+
+	// generate variable names represent ILP problem in glpk format
+	std::string indexToVarName( std::string, int32, int32);
+
+	// convert number to string
+	template<class T> std::string numberToStr(T number);
+
+	// write template into filse
+	void Write(std::string outName, const std::vector<std::string>& ilpProblem);
+
+	BaseFloat delta;
+
 };
 
 }
