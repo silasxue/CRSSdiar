@@ -9,11 +9,13 @@ namespace kaldi {
 bool Diarization::BicSegmentation(std::vector<int32>& segment, const Matrix<BaseFloat>& feats, segType& bicsegments) {
 	// Implement the pseudocode suggested by Cettolo and Vescovi 
 	// (in Efficient audio seg. algo. based on the BIC). 
+
 	int32 endStream = segment[1];
 	int32 startStream = segment[0];
 	int32 endOfDetectedSegment = segment[0];
 	int32 startOfDetectedSegment = segment[0];
-	int32 segmentLength = endStream - startStream;
+	int32 segmentLength = endStream - startStream + 1;
+
 	if (Nmin >= segmentLength) {
 		bicsegments.push_back(std::make_pair("1",segment));
 		return false;
@@ -23,7 +25,6 @@ bool Diarization::BicSegmentation(std::vector<int32>& segment, const Matrix<Base
 	std::pair<int32, BaseFloat> maxBICIndexValue;
 	while (window[1] <= endStream) {
 		maxBICIndexValue = computeBIC(window, feats, lowResolution);
-
 
 		while (maxBICIndexValue.second <= 0 && ((window[1] - window[0]) < Nmax) && window[1] <= endStream) {
 			growWindow(window,Ngrow);
@@ -35,7 +36,7 @@ bool Diarization::BicSegmentation(std::vector<int32>& segment, const Matrix<Base
 			maxBICIndexValue = computeBIC(window, feats, lowResolution);
 		}
 
-		if (maxBICIndexValue.second > 0) {
+		if (maxBICIndexValue.second > 0  && window[1] <= endStream) {
 			centerWindow(window, maxBICIndexValue.first, Nsecond);
 			std::pair<int32,BaseFloat> maxBICIndexValueHighRes = computeBIC(window, feats, highResolution);
 			if (maxBICIndexValueHighRes.second > 0) {
@@ -59,7 +60,7 @@ bool Diarization::BicSegmentation(std::vector<int32>& segment, const Matrix<Base
 }
 
 std::pair<int32, BaseFloat> Diarization::computeBIC(const std::vector<int32>& win, const Matrix<BaseFloat>& features, int32 resolution) {
-	std::vector<BaseFloat> deltaBIC;
+	std::vector<std::pair<int32, BaseFloat> > deltaBIC;
 	int32 N = win[1] - win[0];
 	int32 d = features.NumCols(); // d: feature dimension 
 	BaseFloat P = 0.5*(d + 0.5*(d*(d+1.)))*log(N);
@@ -67,6 +68,7 @@ std::pair<int32, BaseFloat> Diarization::computeBIC(const std::vector<int32>& wi
 	segmentFeatures.CopyFromMat(features.Range(win[0], N, 0, d));
 
 	BaseFloat sigma = detCovariance(segmentFeatures);
+	int32 idx = Nmargin;
 	for (size_t i = win[0] + Nmargin; i < win[1] - Nmargin; i = i + resolution) {
 		Matrix<BaseFloat> feat1(i - win[0], d);
 		feat1.CopyFromMat(features.Range(win[0], i - win[0], 0, d));
@@ -74,17 +76,19 @@ std::pair<int32, BaseFloat> Diarization::computeBIC(const std::vector<int32>& wi
 		feat2.CopyFromMat(features.Range(i, win[1] - i, 0, d));
 		BaseFloat sigma1 = detCovariance(feat1);
 		BaseFloat sigma2 = detCovariance(feat2);
-		deltaBIC.push_back(0.5*(N*log(sigma) - i*log(sigma1) - (N - i)*log(sigma2)) - lambda*P);
+		int32 location = i;
+		deltaBIC.push_back(std::make_pair(location, 0.5*(N*(sigma) - idx*(sigma1) - (N - idx)*(sigma2)) - lambda*P));
+		idx += resolution;
 	}
-
 
 	// find maximum deltaBIC:
-	std::pair<int32, BaseFloat> bicOutput;
+	std::pair<int32, BaseFloat> bicOutput = deltaBIC[0];
 	for (size_t i = 1; i < deltaBIC.size(); i++) {
-		if (deltaBIC[i] >= deltaBIC[i]) {
-			bicOutput = std::make_pair(int32(i), deltaBIC[i]);
+		if (deltaBIC[i].second > bicOutput.second) {
+			bicOutput = deltaBIC[i];
 		}
 	}
+
 	return bicOutput;
 }
 
@@ -100,11 +104,11 @@ BaseFloat Diarization::detCovariance(Matrix<BaseFloat>& data) {
 		covVec.AddVec2(1./numFrames,data.Row(i));
 	}
 	covVec.AddVec2(-1.0, meanVec);
-	BaseFloat covDet = 1.;
+	BaseFloat logCovDet = 0;
 	for (size_t i = 0; i < dim; i++) {
-		covDet = covDet * covVec(i);
+		logCovDet += log(covVec(i));
 	}
-	return covDet;
+	return logCovDet;
 }
 
 std::vector<int32> Diarization::initWindow(int32 start, int32 length) {
@@ -187,12 +191,11 @@ void Diarization::SegmentsToLabels(const segType& segments, Vector<BaseFloat>& l
 	// 0 -> nonspeech
 	// 1,2,..,n -> speaker1, speaker2, speakern   
 	// Other conditions may be added in the future. 
-
-
 	std::vector<int32> lastSegment = segments.back().second;
 	labels.Resize(lastSegment[1]+1);
+	
 	for (size_t i=0; i<segments.size(); i++) {
-		
+		KALDI_LOG << segments[i].first << " : " << segments[i].second[0] << " - " << segments[i].second[1];		
 		std::vector<int32> segmentStartEnd = segments[i].second;
 		int32 segLen = segmentStartEnd[1] - segmentStartEnd[0] + 1;
 		Vector<BaseFloat> segLabels(segLen);		
@@ -202,19 +205,15 @@ void Diarization::SegmentsToLabels(const segType& segments, Vector<BaseFloat>& l
 		}else if (segments[i].first == "overlap") {
 			segLabels.Set(-1.0);
 		}else {
-
 			// convert string to int
 			std::istringstream tmp(segments[i].first);
 			int32 stateInt;
 			tmp >> stateInt;
-			
 			segLabels.Set(stateInt);
 		}
-
 		labels.Range(segmentStartEnd[0],segLen).CopyFromVec(segLabels);
 	}
 }
-
 
 
 }
