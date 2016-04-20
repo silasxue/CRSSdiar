@@ -59,5 +59,8 @@ int main(int argc, char *argv[]) {
         diarObj.SegmentsToLabels(bicSegments, outLabels);
         label_writer.Write(key, outLabels);
         label_reader.Next();
+
+        diarObj.SegmentsToRTTM(key, segments, "tmp.rttm");
+        diarObj.SegmentsToRTTM(key, bicSegments, "tmp1.rttm");
     }
 }

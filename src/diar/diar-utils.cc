@@ -1,6 +1,8 @@
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
+#include <iomanip>
 #include "diar-utils.h"
 
 
@@ -195,7 +197,6 @@ void Diarization::SegmentsToLabels(const segType& segments, Vector<BaseFloat>& l
 	labels.Resize(lastSegment[1]+1);
 	
 	for (size_t i=0; i<segments.size(); i++) {
-		KALDI_LOG << segments[i].first << " : " << segments[i].second[0] << " - " << segments[i].second[1];		
 		std::vector<int32> segmentStartEnd = segments[i].second;
 		int32 segLen = segmentStartEnd[1] - segmentStartEnd[0] + 1;
 		Vector<BaseFloat> segLabels(segLen);		
@@ -215,5 +216,32 @@ void Diarization::SegmentsToLabels(const segType& segments, Vector<BaseFloat>& l
 	}
 }
 
+
+void Diarization::SegmentsToRTTM(const std::string& fileName, const segType& segments, const std::string& outName) {
+	std::ofstream fout;
+	fout.open(outName.c_str());
+	for (size_t i =0; i < segments.size(); i++){
+		if (segments[i].first != "nonspeech" && segments[i].first != "overlap") {
+			std::string spkrID = segments[i].first;
+			BaseFloat segStart = FrameIndexToSeconds(segments[i].second[0]);
+			BaseFloat segLength = FrameIndexToSeconds(segments[i].second[1]) - segStart;
+			fout << "SPEAKER ";
+			fout << fileName << " ";
+			fout << 1 << " ";
+			fout << std::fixed << std::setprecision(3);
+			fout << segStart << " ";
+			fout << segLength << " ";
+			fout << "<NA> <NA> ";
+			fout << spkrID << " ";
+			fout << "<NA>\n";
+		}	
+	}
+	fout.close();
+}
+
+
+BaseFloat Diarization::FrameIndexToSeconds(int32 frame) {
+	return frame*frameShift;
+}
 
 }
