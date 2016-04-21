@@ -43,7 +43,6 @@ int main(int argc, char *argv[]) {
         diarObj.LabelsToSegments(label_reader.Value(), segments); 
 
     	segType bicSegments; // Segmentations after bic change detection
-
     	for(size_t i=0; i<segments.size(); i++){
 
     		if (segments[i].first == "nonspeech"){
@@ -60,7 +59,11 @@ int main(int argc, char *argv[]) {
         label_writer.Write(key, outLabels);
         label_reader.Next();
 
-        diarObj.SegmentsToRTTM(key, segments, "tmp.rttm");
-        diarObj.SegmentsToRTTM(key, bicSegments, "tmp1.rttm");
+        segType bicSpeechSegments;
+        segType speechSegments;
+        diarObj.getSpeechSegments(segments, speechSegments);
+        diarObj.getSpeechSegments(bicSegments, bicSpeechSegments);        
+        diarObj.SegmentsToRTTM(key, speechSegments, "tmp.rttm");
+        diarObj.SegmentsToRTTM(key, bicSpeechSegments, "tmp1.rttm");
     }
 }

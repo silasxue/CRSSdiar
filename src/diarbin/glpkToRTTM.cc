@@ -92,6 +92,6 @@ int main(int argc, char *argv[]) {
         }
     }
     Diarization diarObj;
-    diarObj.SegmentsToRTTM("IS1000b.Mix-Headset",allSegments,rttm_wspecifier);
+    diarObj.SegmentsToRTTM("allfile",allSegments,rttm_wspecifier);
 }
 
