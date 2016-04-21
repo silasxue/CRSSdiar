@@ -18,8 +18,6 @@ namespace kaldi{
 // by Gregor Dupuy, Sylvain Meignier, Paul Deleglise, Yannic Esteve
 
 typedef kaldi::int32 int32;
-// convert number to string
-template<class T> std::string numberToStr(T number);
 
 class IlpCluster {
 public:
