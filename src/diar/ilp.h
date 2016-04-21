@@ -41,10 +41,12 @@ public:
 	void glpkIlpProblem(const Matrix<BaseFloat>& , std::vector<std::string>&);
 
 	// compute distant matrix from i-vector collections, return distant matrix, and list of corresponding keys of ivectors
-	void computIvectorDistMatrix(const std::vector< Vector<double> >&, Matrix<BaseFloat>&, std::vector<std::string>&); 
+	void computIvectorDistMatrix(const std::vector< Vector<double> >&, Matrix<BaseFloat>&, std::vector<std::string>&);
+
+	SpMatrix<BaseFloat> getCovariance(const std::vector< <Vector<double> > >& ivectorCollect);
 
 	// compute the Mahalanobis distance between two i-vectors
-	// double ivectorMahalanobisDistance(Vector<double>& , Vector<double>& );
+	BaseFloat ivectorMahalanobisDistance(const Vector<double>& ivec1, const Vector<double>& ivec2, const Matrix<BaseFloat>& covMat);
 
 	// compute the cosine distance between two i-vectors
 	BaseFloat ivectorCosineDistance(const Vector<double>& , const Vector<double>& );

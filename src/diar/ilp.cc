@@ -89,18 +89,44 @@ namespace kaldi{
 	void IlpCluster::computIvectorDistMatrix(const std::vector< Vector<double> >& ivectorCollect, Matrix<BaseFloat>& distMatrix, std::vector<string>& ivectorKeyList) {
 
 		distMatrix.Resize(ivectorCollect.size(),ivectorCollect.size());
+
+		// Calculate total covariance:
+		SpMatrix<BaseFloat> totalCov = getCovariance(ivectorCollect);
+
+
+
+
 		for (size_t i=0; i<ivectorCollect.size();i++){
 			for (size_t j=0;j<ivectorCollect.size();j++){
 				if (i == j){
 					distMatrix(i,j) = 0;
 				}else{
-					// distmatrix(i,j) = ivectorMahalanobisDistance(ivectorCollect[i], ivectorCollect[j]);
+					//distmatrix(i,j) = ivectorMahalanobisDistance(ivectorCollect[i], ivectorCollect[j], covMat);
 					distMatrix(i,j) = 1 - ivectorCosineDistance(ivectorCollect[i], ivectorCollect[j]);
 				}
 			}
 		}
 
 	}
+
+	SpMatrix<BaseFloat> IlpCluster::getCovariance(const std::vector< <Vector<double> > >& ivectorCollect) {
+		// Convert ivector collection vector into sparse matrix (Because we use SpMatrix methods).
+		size_t N = ivectorCollect.size();
+		int32 dim = ivectorCollect[0].Dim(); // doesn't matter which ivectorCollect[i] we use.
+		Matrix<BaseFloat> ivectorCollectionMatrix(N,dim);
+		for (size_t i = 0; i < N; i++) {
+			ivectorCollectionMatrix.Row(i).CopyRowFromVec(ivectorCollect[i]);
+		}
+		
+		SpMatrix<BaseFloat> totalCov;
+		totalCov.AddMat2(1.0, ivectorCollectionMatrix, kTrans, 1.0);
+		return (1.0/N) * totalCov;
+	}
+
+	BaseFloat ivectorMahalanobisDistance(const Vector<double>& ivec1, const Vector<double>& ivec2, const Matrix<BaseFloat>& covMat) {
+
+	}
+
 
 	BaseFloat IlpCluster::ivectorCosineDistance(const Vector<double>& ivec1, const Vector<double>& ivec2) {
 		 BaseFloat dotProduct = VecVec(ivec1, ivec2);
@@ -109,6 +135,7 @@ namespace kaldi{
 
 		 return dotProduct / (sqrt(norm1)*sqrt(norm2));  
 	}
+
 
 	void IlpCluster::glpkIlpProblem(const Matrix<BaseFloat>& distMatrix, std::vector<std::string>& ilpProblem) {
 
