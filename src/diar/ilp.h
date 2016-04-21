@@ -18,6 +18,9 @@ namespace kaldi{
 // by Gregor Dupuy, Sylvain Meignier, Paul Deleglise, Yannic Esteve
 
 typedef kaldi::int32 int32;
+// convert number to string
+template<class T> std::string numberToStr(T number);
+
 class IlpCluster {
 public:
 
@@ -61,8 +64,8 @@ public:
 	// generate variable names represent ILP problem in glpk format
 	std::string indexToVarName( std::string, int32, int32);
 
-	// convert number to string
-	template<class T> std::string numberToStr(T number);
+	// generate variable names represent ILP problem in glpk format
+	std::vector<int32> varNameToIndex( std::string var);
 
 	// write template into filse
 	void Write(std::string outName, const std::vector<std::string>& ilpProblem);

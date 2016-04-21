@@ -5,7 +5,10 @@
 #include <sstream>
 #include <algorithm>
 #include <math.h>
+#include "diar-utils.h"
 #include "ilp.h"
+
+
 
 
 namespace kaldi{
@@ -193,12 +196,6 @@ namespace kaldi{
 	    return prefix + "_" + numberToStr(i) + "_" + numberToStr(j);
 	}
 
-	template<class T>
-	std::string IlpCluster::numberToStr(T number){
-	    std::stringstream tmpStream;
-	    tmpStream << number;
-	    return tmpStream.str();
-	}
 
 	void IlpCluster::Write(std::string outName, const std::vector<std::string>& ilpProblem){
 

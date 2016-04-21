@@ -8,6 +8,17 @@
 namespace kaldi{
 typedef std::vector< std::pair<std::string, std::vector<int32> > > segType;
 
+// convert number to string
+// template<class T> std::string numberToStr(T number);
+
+template<class T>
+inline std::string numberToStr(T number){
+
+    std::stringstream tmpStream;
+    tmpStream << number;
+    return tmpStream.str();
+}
+
 class Diarization{
 public:
 	Diarization(){
@@ -28,6 +39,7 @@ public:
 	}
 	void LabelsToSegments(const Vector<BaseFloat>&, segType&);
 	void SegmentsToLabels(const segType&, Vector<BaseFloat>&);
+	void getSpeechSegments(const segType& segments, segType& speechSegments);
 	void SegmentsToRTTM(const std::string& fileName, const segType& segments, const std::string& outName);
 	BaseFloat FrameIndexToSeconds(int32 frame);
 	bool BicSegmentation(std::vector<int32>&, const Matrix<BaseFloat>&, segType&);    			
