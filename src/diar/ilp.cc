@@ -25,27 +25,19 @@ namespace kaldi{
 
 		int32 numSpeechSeg = 0;
 		for (size_t i=0; i<numSegs; i++){
-
 			std::string segmentLabel = inputSegments[i].first;
+			numSpeechSeg++;
 
-			if (segmentLabel != "nonspeech" && segmentLabel != "overlap"){
+			std::vector<int32> segmentStartEnd = inputSegments[i].second;
+			Matrix<BaseFloat> segFeats(segmentStartEnd[1] - segmentStartEnd[0] +1, featsDim);
+			segFeats.CopyFromMat(feats.Range(segmentStartEnd[0], segmentStartEnd[1] - segmentStartEnd[0] +1, 0, featsDim ));
 
-				numSpeechSeg++;
+			Posterior::const_iterator startIter = posterior.begin() + segmentStartEnd[0];
+			Posterior::const_iterator endIter = posterior.begin() + segmentStartEnd[1]+1;
+			Posterior segPosterior(startIter, endIter);
 
-				std::vector<int32> segmentStartEnd = inputSegments[i].second;
-				Matrix<BaseFloat> segFeats(segmentStartEnd[1] - segmentStartEnd[0] +1, featsDim);
-				segFeats.CopyFromMat(feats.Range(segmentStartEnd[0], segmentStartEnd[1] - segmentStartEnd[0] +1, 0, featsDim ));
-
-				Posterior::const_iterator startIter = posterior.begin() + segmentStartEnd[0];
-				Posterior::const_iterator endIter = posterior.begin() + segmentStartEnd[1]+1;
-				Posterior segPosterior(startIter, endIter);
-
-				KALDI_LOG << " Segment Range : segmentStartEnd[0]" << " <-> " << segmentStartEnd[1] << " The seg size is: " << segPosterior.size();
-
-				GetSegmentIvector(segFeats, segPosterior, extractor, ivectorWriter, key, segmentStartEnd);
-
-			}
-
+			KALDI_LOG << " Segment Range : segmentStartEnd[0]" << " <-> " << segmentStartEnd[1] << " The seg size is: " << segPosterior.size();
+			GetSegmentIvector(segFeats, segPosterior, extractor, ivectorWriter, key, segmentStartEnd);
 		}
 	}
 

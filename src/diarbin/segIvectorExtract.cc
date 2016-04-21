@@ -51,11 +51,13 @@ int main(int argc, char *argv[]) {
 		Posterior posterior = posterior_reader.Value(key);   
 
 		// convert labels into segemt format
-		segType inputSegments;
-		diarObj.LabelsToSegments(label_reader.Value(), inputSegments);
+		segType segments;
+		segType speechSegments;
+		diarObj.LabelsToSegments(label_reader.Value(), segments);
+		diarObj.getSpeechSegments(segments, speechSegments);
 
 		// extract i-vectors for all segments of given utterance, save them into a matrix 
-		ilpObj.ExtractSegmentIvectors(feats, inputSegments, posterior, extractor, ivector_writer, key);
+		ilpObj.ExtractSegmentIvectors(feats, speechSegments, posterior, extractor, ivector_writer, key);
 
 		label_reader.Next();
 

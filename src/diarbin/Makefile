@@ -7,7 +7,7 @@ KALDI_DIR = /home/nxs113020/kaldi-trunk
 EXTRA_CXXFLAGS = -Wno-sign-compare -I${KALDI_DIR}/src
 include ${KALDI_DIR}/src/kaldi.mk
 
-BINFILES = changeDetectBIC segIvectorExtract ivectorTest glpkIlpTemplate glpkToRTTM
+BINFILES = changeDetectBIC segIvectorExtract ivectorTest glpkIlpTemplate glpkToRTTM labelToRTTM
 
 OBJFILES = 
 

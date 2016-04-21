@@ -50,19 +50,35 @@ test_changedetection() {
 }
 #test_changedetection
 
-testsegIvector(){
+test_segIvectorExtract(){
     
     sid/test_seg_ivector.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/test_seg_ivector
-    ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- | ivector-normalize-length ark:- ark:- | ivectorTest ark:- ark:local/label.ark 	    		
-    #ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- |  ivectorTest ark:- ark:local/label.ark 	    		
+    #ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- | ivector-normalize-length ark:- ark:- | ivectorTest ark:- ark:local/label.ark 	    		
+    ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- |  ivectorTest ark:- ark:local/label.ark 	    		
 }
-#testsegIvector
+#test_segIvectorExtract
 
-testGlpkTemplate(){
-   glpkIlpTemplate "ark:ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- |" ./template.glp
-   glpsol --lp ./template.glp -o ./tmpout.sol
+glpk_dir=exp/glpk
+test_glpkIlpTemplate(){
+   mkdir -p $glpk_dir; rm -f $glpk_dir/*
+
+   ivector_feats="ark:ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- | ivector-normalize-length ark:- ark:- |"		
+   #ivector_feats="ark:exp/test_seg_ivector/ivector.1.ark"		
+   glpkIlpTemplate "$ivector_feats" $glpk_dir/glp.template
+   glpsol --lp $glpk_dir/glp.template -o $glpk_dir/glp.sol
 }
-testGlpkTemplate
+test_glpkIlpTemplate
+
+rttm_dir=exp/rttm
+rttm_dir=exp/rttm
+test_DER(){
+   mkdir -p $rttm_dir; rm -f $rttm_dir/*
+
+   labelToRTTM ark:local/label.ark $rttm_dir/rttm.true	
+   glpkToRTTM $glpk_dir/glp.sol ark:local/label.ark $rttm_dir/rttm.est
+   perl local/md-eval-v21.pl -r $rttm_dir/rttm.true -s $rttm_dir/rttm.est	
+}
+test_DER
 
 
 

@@ -228,7 +228,6 @@ void Diarization::SegmentsToRTTM(const std::string& fileName, const segType& seg
 	std::ofstream fout;
 	fout.open(outName.c_str());
 	for (size_t i =0; i < segments.size(); i++){
-		if (segments[i].first != "nonspeech" && segments[i].first != "overlap") {
 			std::string spkrID = segments[i].first;
 			BaseFloat segStart = FrameIndexToSeconds(segments[i].second[0]);
 			BaseFloat segLength = FrameIndexToSeconds(segments[i].second[1]) - segStart;
@@ -241,7 +240,6 @@ void Diarization::SegmentsToRTTM(const std::string& fileName, const segType& seg
 			fout << "<NA> <NA> ";
 			fout << spkrID << " ";
 			fout << "<NA>\n";
-		}	
 	}
 	fout.close();
 }
