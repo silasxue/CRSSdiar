@@ -216,6 +216,13 @@ void Diarization::SegmentsToLabels(const segType& segments, Vector<BaseFloat>& l
 	}
 }
 
+void Diarization::getSpeechSegments(const segType& segments, segType& speechSegments){
+	for (size_t i = 0; i < segments.size(); i++){
+		if (segments[i].first != "nonspeech" && segments[i].first != "overlap") {
+			speechSegments.push_back(segments[i]);
+		}
+	}
+}
 
 void Diarization::SegmentsToRTTM(const std::string& fileName, const segType& segments, const std::string& outName) {
 	std::ofstream fout;

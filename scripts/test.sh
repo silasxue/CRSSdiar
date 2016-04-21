@@ -59,7 +59,7 @@ testsegIvector(){
 #testsegIvector
 
 testGlpkTemplate(){
-   glpkIlpTemplate ark:exp/test_seg_ivector/ivector.1.ark ./template.glp
+   glpkIlpTemplate "ark:ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- |" ./template.glp
    glpsol --lp ./template.glp -o ./tmpout.sol
 }
 testGlpkTemplate
