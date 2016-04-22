@@ -43,6 +43,7 @@ public:
 	void SegmentsToRTTM(const std::string& fileName, const segType& segments, const std::string& outName);
 	BaseFloat FrameIndexToSeconds(int32 frame);
 	bool BicSegmentation(std::vector<int32>&, const Matrix<BaseFloat>&, segType&);    			
+	BaseFloat compareSegments(segType& segments1, segType& segments2);
 	std::pair<int32, BaseFloat> computeBIC(const std::vector<int32>&, const Matrix<BaseFloat>&, int32);
 	BaseFloat detCovariance(Matrix<BaseFloat>&);
 	std::vector<int32> initWindow(int32, int32);

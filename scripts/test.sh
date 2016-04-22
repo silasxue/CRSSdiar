@@ -48,7 +48,7 @@ test_l2s(){
 test_changedetection() {
     changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
 }
-#test_changedetection
+test_changedetection
 
 test_segIvectorExtract(){
     
@@ -67,7 +67,7 @@ test_glpkIlpTemplate(){
    glpkIlpTemplate "$ivector_feats" $glpk_dir/glp.template
    glpsol --lp $glpk_dir/glp.template -o $glpk_dir/glp.sol
 }
-test_glpkIlpTemplate
+#test_glpkIlpTemplate
 
 rttm_dir=exp/rttm
 rttm_dir=exp/rttm
@@ -78,8 +78,4 @@ test_DER(){
    glpkToRTTM $glpk_dir/glp.sol ark:local/label.ark $rttm_dir/rttm.est
    perl local/md-eval-v21.pl -r $rttm_dir/rttm.true -s $rttm_dir/rttm.est	
 }
-test_DER
-
-
-
-
+#test_DER

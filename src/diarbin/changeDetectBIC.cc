@@ -63,6 +63,7 @@ int main(int argc, char *argv[]) {
         segType speechSegments;
         diarObj.getSpeechSegments(segments, speechSegments);
         diarObj.getSpeechSegments(bicSegments, bicSpeechSegments);        
+        KALDI_LOG << diarObj.compareSegments(speechSegments, bicSpeechSegments);
         diarObj.SegmentsToRTTM(key, speechSegments, "tmp.rttm");
         diarObj.SegmentsToRTTM(key, bicSpeechSegments, "tmp1.rttm");
     }

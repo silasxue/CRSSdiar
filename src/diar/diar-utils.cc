@@ -139,6 +139,25 @@ void Diarization::centerWindow(std::vector<int32>& win, int32 center, int32 N) {
 	}
 }
 
+
+BaseFloat Diarization::compareSegments(segType& refSegs, segType& estSegs) {
+		int32 j = 0;
+		int32 i = 0;
+		int32 unwantedChanges = 0;
+		while (i < estSegs.size()) {
+			if (estSegs[i].second[0] >= refSegs[j].second[0] &&
+					estSegs[i].second[1] <= refSegs[j].second[1]) {
+				i++;
+				unwantedChanges++;
+			}else {
+				j++;
+				i++;
+			}
+		}
+		return 100.*unwantedChanges/estSegs.size();
+}
+
+
 void Diarization::LabelsToSegments(const Vector<BaseFloat>& labels, segType& segments) {
 	// NOTE: The rules of input label is as follow
 	// -1 -> overlap
@@ -252,3 +271,5 @@ void Diarization::getSpeechSegments(const segType& segments, segType& speechSegm
 }
 
 }
+
+
