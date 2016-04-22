@@ -242,4 +242,13 @@ BaseFloat Diarization::FrameIndexToSeconds(int32 frame) {
 	return frame*frameShift;
 }
 
+
+void Diarization::getSpeechSegments(const segType& segments, segType& speechSegments) {
+	for (size_t i = 0; i < segments.size(); i++) {
+		if (segments[i].first != "nonspeech" && segments[i].first != "overlap") {
+			speechSegments.push_back(segments[i]);
+		}
+	}
+}
+
 }

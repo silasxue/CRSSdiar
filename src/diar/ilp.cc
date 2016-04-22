@@ -9,8 +9,6 @@
 #include "ilp.h"
 
 
-
-
 namespace kaldi{
 
 	void IlpCluster::ExtractSegmentIvectors(const Matrix<BaseFloat>& feats, 
@@ -86,45 +84,72 @@ namespace kaldi{
 	    segIvectorKey = uttid + "_" + segStartEndString;       
 	}
 
+
 	void IlpCluster::computIvectorDistMatrix(const std::vector< Vector<double> >& ivectorCollect, Matrix<BaseFloat>& distMatrix, std::vector<string>& ivectorKeyList) {
 
 		distMatrix.Resize(ivectorCollect.size(),ivectorCollect.size());
 
-		// Calculate total covariance:
-		SpMatrix<BaseFloat> totalCov = getCovariance(ivectorCollect);
 
-
-
+		// Calculate total mean and covariance:
+		Vector<double> ivectorMean;
+		getMean(ivectorCollect, ivectorMean);
+		SpMatrix<double> ivectorCovariance = getCovariance(ivectorCollect,ivectorMean);
 
 		for (size_t i=0; i<ivectorCollect.size();i++){
 			for (size_t j=0;j<ivectorCollect.size();j++){
 				if (i == j){
 					distMatrix(i,j) = 0;
 				}else{
-					//distmatrix(i,j) = ivectorMahalanobisDistance(ivectorCollect[i], ivectorCollect[j], covMat);
-					distMatrix(i,j) = 1 - ivectorCosineDistance(ivectorCollect[i], ivectorCollect[j]);
+					distMatrix(i,j) = ivectorMahalanobisDistance(ivectorCollect[i], ivectorCollect[j], ivectorCovariance);
+					//distMatrix(i,j) = 1 - ivectorCosineDistance(ivectorCollect[i], ivectorCollect[j], totalCov);
 				}
 			}
 		}
 
 	}
 
-	SpMatrix<BaseFloat> IlpCluster::getCovariance(const std::vector< <Vector<double> > >& ivectorCollect) {
+
+	SpMatrix<double> IlpCluster::getCovariance(const std::vector< Vector<double> >& ivectorCollect, const Vector<double>& totalMean) {
 		// Convert ivector collection vector into sparse matrix (Because we use SpMatrix methods).
 		size_t N = ivectorCollect.size();
 		int32 dim = ivectorCollect[0].Dim(); // doesn't matter which ivectorCollect[i] we use.
-		Matrix<BaseFloat> ivectorCollectionMatrix(N,dim);
+		Matrix<double> ivectorCollectionMatrix(N,dim);
 		for (size_t i = 0; i < N; i++) {
-			ivectorCollectionMatrix.Row(i).CopyRowFromVec(ivectorCollect[i]);
+			ivectorCollectionMatrix.CopyRowFromVec(ivectorCollect[i], i);
 		}
-		
-		SpMatrix<BaseFloat> totalCov;
-		totalCov.AddMat2(1.0, ivectorCollectionMatrix, kTrans, 1.0);
-		return (1.0/N) * totalCov;
+		ivectorCollectionMatrix.AddVecToRows(-1., totalMean);		
+		SpMatrix<double> totalCov(dim);
+		totalCov.AddMat2(1.0/N, ivectorCollectionMatrix, kTrans, 1.0);
+		return totalCov;
 	}
 
-	BaseFloat ivectorMahalanobisDistance(const Vector<double>& ivec1, const Vector<double>& ivec2, const Matrix<BaseFloat>& covMat) {
 
+	void IlpCluster::getMean(const std::vector< Vector<double> >& ivectorCollect, Vector<double>& totalMean) {
+		size_t N = ivectorCollect.size();
+		int32 dim = ivectorCollect[0].Dim(); // doesn't matter which ivectorCollect[i] we use.
+		totalMean.Resize(dim);
+		totalMean.SetZero();
+		for (size_t i = 0; i < N; i++) {
+			totalMean.AddVec(1./N, ivectorCollect[i]);
+		}		
+	}
+
+
+	BaseFloat IlpCluster::ivectorMahalanobisDistance(const Vector<double>& ivec1, const Vector<double>& ivec2, const SpMatrix<double>& totalCov) {
+
+		Vector<double> iv1(ivec1.Dim());
+		iv1.CopyFromVec(ivec1);
+		Vector<double> iv2(ivec2.Dim());
+		iv2.CopyFromVec(ivec2);
+		SpMatrix<double> Sigma(ivec2.Dim());
+		Sigma.CopyFromSp(totalCov);
+		Sigma.Invert();
+		iv1.AddVec(-1.,iv2);
+
+		// Now, calculate the quadratic term: (iv1 - iv2)^T Sigma (iv1-iv2)
+		Vector<double> S_iv1(iv1.Dim());
+   		S_iv1.AddSpVec(1.0, Sigma, iv1, 0.0);
+   		return sqrt(VecVec(iv1, S_iv1));
 	}
 
 

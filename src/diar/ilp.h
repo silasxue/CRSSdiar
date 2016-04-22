@@ -23,7 +23,7 @@ class IlpCluster {
 public:
 
 	IlpCluster() { 
-		delta  = 0.5;
+		delta  = 50;
 	}
 
 	// extract ivectors for all nonspeech segments
@@ -41,10 +41,12 @@ public:
 	// compute distant matrix from i-vector collections, return distant matrix, and list of corresponding keys of ivectors
 	void computIvectorDistMatrix(const std::vector< Vector<double> >&, Matrix<BaseFloat>&, std::vector<std::string>&);
 
-	SpMatrix<BaseFloat> getCovariance(const std::vector< <Vector<double> > >& ivectorCollect);
+	SpMatrix<double> getCovariance(const std::vector< Vector<double> >& ivectorCollect, const Vector<double>& totalMean);
+
+	void getMean(const std::vector< Vector<double> >& ivectorCollect, Vector<double>& totalMean);
 
 	// compute the Mahalanobis distance between two i-vectors
-	BaseFloat ivectorMahalanobisDistance(const Vector<double>& ivec1, const Vector<double>& ivec2, const Matrix<BaseFloat>& covMat);
+	BaseFloat ivectorMahalanobisDistance(const Vector<double>& ivec1, const Vector<double>& ivec2, const SpMatrix<double>& totalCov);
 
 	// compute the cosine distance between two i-vectors
 	BaseFloat ivectorCosineDistance(const Vector<double>& , const Vector<double>& );
