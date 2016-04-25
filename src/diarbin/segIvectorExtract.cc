@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     kaldi::ParseOptions po(usage);
 	po.Read(argc, argv);
 
-	if (po.NumArgs() != 5) {
+	if (po.NumArgs() != 6) {
         po.PrintUsage();
         exit(1);
     }
@@ -26,12 +26,12 @@ int main(int argc, char *argv[]) {
     	        label_rspecifier = po.GetArg(2),
     	        posterior_rspecifier = po.GetArg(3),
     	        ivector_extractor_rxfilename = po.GetArg(4),
-    	        ivector_wspecifier = po.GetArg(5);
+    	        segments_dirname = po.GetArg(5),
+    	        ivector_wspecifier = po.GetArg(6);
 
     SequentialBaseFloatMatrixReader feature_reader(feature_rspecifier);
     SequentialBaseFloatVectorReader label_reader(label_rspecifier);
     RandomAccessPosteriorReader posterior_reader(posterior_rspecifier);
-    DoubleVectorWriter ivector_writer(ivector_wspecifier);
 
     IvectorExtractor extractor;
 	ReadKaldiObject(ivector_extractor_rxfilename, &extractor);
@@ -44,20 +44,16 @@ int main(int argc, char *argv[]) {
 		        KALDI_ERR << "Feature and label mismatch";
 		}
 
-	 	Diarization diarObj;
-		IlpCluster ilpObj;
-
 		const Matrix<BaseFloat> &feats = feature_reader.Value();
 		Posterior posterior = posterior_reader.Value(key);   
 
-		// convert labels into segemt format
-		segType segments;
-		segType speechSegments;
-		diarObj.LabelsToSegments(label_reader.Value(), segments);
-		diarObj.getSpeechSegments(segments, speechSegments);
+		// convert labels into segments
+		Segments allSegments(label_reader.Value(), key);
+		Segments speechSegments = allSegments.GetSpeechSegments();
+		speechSegments.ExtractIvectors(feats, posterior, extractor);
 
-		// extract i-vectors for all segments of given utterance, save them into a matrix 
-		ilpObj.ExtractSegmentIvectors(feats, speechSegments, posterior, extractor, ivector_writer, key);
+		speechSegments.Write(segments_dirname);
+		speechSegments.WriteIvectors(ivector_wspecifier);
 
 		label_reader.Next();
 

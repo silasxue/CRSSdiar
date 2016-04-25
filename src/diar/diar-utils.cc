@@ -2,174 +2,33 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <iomanip>
 #include "diar-utils.h"
 
 
 namespace kaldi {
 
-bool Diarization::BicSegmentation(std::vector<int32>& segment, const Matrix<BaseFloat>& feats, segType& bicsegments) {
-	// Implement the pseudocode suggested by Cettolo and Vescovi 
-	// (in Efficient audio seg. algo. based on the BIC). 
 
-	int32 endStream = segment[1];
-	int32 startStream = segment[0];
-	int32 endOfDetectedSegment = segment[0];
-	int32 startOfDetectedSegment = segment[0];
-	int32 segmentLength = endStream - startStream + 1;
+Segments::Segments(){}
 
-	if (Nmin >= segmentLength) {
-		bicsegments.push_back(std::make_pair("1",segment));
-		return false;
-	}
-
-	std::vector<int32> window = initWindow(startStream,Nmin);
-	std::pair<int32, BaseFloat> maxBICIndexValue;
-	while (window[1] <= endStream) {
-		maxBICIndexValue = computeBIC(window, feats, lowResolution);
-
-		while (maxBICIndexValue.second <= 0 && ((window[1] - window[0]) < Nmax) && window[1] <= endStream) {
-			growWindow(window,Ngrow);
-			maxBICIndexValue = computeBIC(window, feats, lowResolution);
-		}
-
-		while (maxBICIndexValue.second <= 0 && window[1] <= endStream) {
-			shiftWindow(window, Nshift);
-			maxBICIndexValue = computeBIC(window, feats, lowResolution);
-		}
-
-		if (maxBICIndexValue.second > 0  && window[1] <= endStream) {
-			centerWindow(window, maxBICIndexValue.first, Nsecond);
-			std::pair<int32,BaseFloat> maxBICIndexValueHighRes = computeBIC(window, feats, highResolution);
-			if (maxBICIndexValueHighRes.second > 0) {
-				endOfDetectedSegment = maxBICIndexValueHighRes.first;
-				std::vector<int32> detectedSegment;
-				detectedSegment.push_back(startOfDetectedSegment);
-				detectedSegment.push_back(endOfDetectedSegment);
-				bicsegments.push_back(std::make_pair("1",detectedSegment));
-				startOfDetectedSegment = endOfDetectedSegment + 1;
-				window = initWindow(startOfDetectedSegment, Nmin);
-			} else {
-				window = initWindow(maxBICIndexValue.first - Nmargin + 1, Nmin);
-			}
-		}
-	}
-	std::vector<int32> lastSegment;
-	lastSegment.push_back(startOfDetectedSegment);
-	lastSegment.push_back(endStream);
-	bicsegments.push_back(std::make_pair("1",lastSegment));
-	return true;
-}
-
-std::pair<int32, BaseFloat> Diarization::computeBIC(const std::vector<int32>& win, const Matrix<BaseFloat>& features, int32 resolution) {
-	std::vector<std::pair<int32, BaseFloat> > deltaBIC;
-	int32 N = win[1] - win[0];
-	int32 d = features.NumCols(); // d: feature dimension 
-	BaseFloat P = 0.5*(d + 0.5*(d*(d+1.)))*log(N);
-	Matrix<BaseFloat> segmentFeatures(N, d);
-	segmentFeatures.CopyFromMat(features.Range(win[0], N, 0, d));
-
-	BaseFloat sigma = detCovariance(segmentFeatures);
-	int32 idx = Nmargin;
-	for (size_t i = win[0] + Nmargin; i < win[1] - Nmargin; i = i + resolution) {
-		Matrix<BaseFloat> feat1(i - win[0], d);
-		feat1.CopyFromMat(features.Range(win[0], i - win[0], 0, d));
-		Matrix<BaseFloat> feat2(win[1] - i, d);
-		feat2.CopyFromMat(features.Range(i, win[1] - i, 0, d));
-		BaseFloat sigma1 = detCovariance(feat1);
-		BaseFloat sigma2 = detCovariance(feat2);
-		int32 location = i;
-		deltaBIC.push_back(std::make_pair(location, 0.5*(N*(sigma) - idx*(sigma1) - (N - idx)*(sigma2)) - lambda*P));
-		idx += resolution;
-	}
-
-	// find maximum deltaBIC:
-	std::pair<int32, BaseFloat> bicOutput = deltaBIC[0];
-	for (size_t i = 1; i < deltaBIC.size(); i++) {
-		if (deltaBIC[i].second > bicOutput.second) {
-			bicOutput = deltaBIC[i];
-		}
-	}
-
-	return bicOutput;
-}
-
-BaseFloat Diarization::detCovariance(Matrix<BaseFloat>& data) {
-	// Calculates the covariance of data and returns its 
-	// determinant, assuming a diagonal covariance matrix.
-	int32 numFrames = data.NumRows();
-	int32 dim = data.NumCols();
-
-	Vector<BaseFloat> meanVec(dim), covVec(dim); 
-	for (size_t i = 0; i < numFrames; i++) {
-		meanVec.AddVec(1./numFrames,data.Row(i));
-		covVec.AddVec2(1./numFrames,data.Row(i));
-	}
-	covVec.AddVec2(-1.0, meanVec);
-	BaseFloat logCovDet = 0;
-	for (size_t i = 0; i < dim; i++) {
-		logCovDet += log(covVec(i));
-	}
-	return logCovDet;
-}
-
-std::vector<int32> Diarization::initWindow(int32 start, int32 length) {
-	std::vector<int32> win;
-	win.push_back(start);
-	win.push_back(start+length);
-	return win;
-}
-
-void Diarization::growWindow(std::vector<int32>& win, int32 N) {
-	win[1] = win[1] + N;
-}
-
-void Diarization::shiftWindow(std::vector<int32>& win, int32 N) {
-	win[0] = win[0] + N;
-	win[1] = win[1] + N;
-}
-
-void Diarization::centerWindow(std::vector<int32>& win, int32 center, int32 N) {
-	if (N % 2 == 0) {
-		win[0] = center - N/2;
-		win[1] = center + N/2;
-	} else {
-		win[0] = center - N/2;
-		win[1] = center + N/2 + 1;
-	}
+Segments::Segments(const std::string uttid){
+	this->_uttid = uttid;
 }
 
 
-BaseFloat Diarization::compareSegments(segType& refSegs, segType& estSegs) {
-		int32 j = 0;
-		int32 i = 0;
-		int32 unwantedChanges = 0;
-		while (i < estSegs.size()) {
-			if (estSegs[i].second[0] >= refSegs[j].second[0] &&
-					estSegs[i].second[1] <= refSegs[j].second[1]) {
-				i++;
-				unwantedChanges++;
-			}else {
-				j++;
-				i++;
-			}
-		}
-		return 100.*unwantedChanges/estSegs.size();
-}
-
-
-void Diarization::LabelsToSegments(const Vector<BaseFloat>& labels, segType& segments) {
+Segments::Segments(const Vector<BaseFloat>& labels, const std::string uttid) {
 	// NOTE: The rules of input label is as follow
 	// -1 -> overlap
 	// 0 -> nonspeech
 	// 1,2,..,n -> speaker1, speaker2, speakern   
-	// Other conditions may be added in the future. 
-
-	int state;
-	int prevState;
+	// Other conditions may be added in the future.
+	this->_uttid = uttid;
+	int32 state;
+	int32 prevState;
 	std::vector<int32> segmentStartEnd;
-	int startSeg = 0;
-	int endSeg = 0;
+	int32 startSeg = 0;
+	int32 endSeg = 0;
 	segmentStartEnd.push_back(startSeg);
 	segmentStartEnd.push_back(endSeg);
 	for (size_t i=1; i<labels.Dim(); i++) {
@@ -179,56 +38,81 @@ void Diarization::LabelsToSegments(const Vector<BaseFloat>& labels, segType& seg
 			if (i==labels.Dim()-1) {
 				i++;
 			}
-
 			if (prevState == -1) {
 				segmentStartEnd[1] = i-1;
-				segments.push_back(std::make_pair("overlap",segmentStartEnd));
+				this->_segmentList.push_back(std::make_pair("overlap",segmentStartEnd));
 				segmentStartEnd[0] = i;
 			}else if (prevState == 0) {
 				segmentStartEnd[1] = i-1;
-				segments.push_back(std::make_pair("nonspeech",segmentStartEnd));
+				this->_segmentList.push_back(std::make_pair("nonspeech",segmentStartEnd));
 				segmentStartEnd[0] = i;				
 			}else if (prevState > 0) {
-
-				// covert int to string
-				std::string stateStr;
-				std::stringstream tmp; 
-				tmp << prevState;
-				stateStr = tmp.str();
-
+				std:: string stateStr = numberToString(prevState);
 				segmentStartEnd[1] = i-1;
-				segments.push_back(std::make_pair(stateStr,segmentStartEnd));
+				this->_segmentList.push_back(std::make_pair(stateStr,segmentStartEnd));
 				segmentStartEnd[0] = i;
 			} 
 		}
-
 	}
 }
 
+std::string Segments::GetUttID() {
+	return this->_uttid;
+}
 
-void Diarization::SegmentsToLabels(const segType& segments, Vector<BaseFloat>& labels){
+
+Vector<double> Segments::GetIvector(int32 index) {
+	return this->_ivectorList[index];
+}
+
+
+int32 Segments::Size() const {
+	return int32(this->_segmentList.size());
+}
+
+
+std::string Segments::SegKey(int32 index) {
+	return this->_segmentList[index].first;
+}
+
+
+std::vector<int32> Segments::SegStartEnd(int32 index) const {
+	return this->_segmentList[index].second;
+}
+
+
+segUnit Segments::GetSeg(int32 index) const {
+	return this->_segmentList[index];
+}
+
+segUnit Segments::End() {
+	return this->_segmentList.back();
+}
+
+
+segUnit Segments::Begin() {
+	return this->_segmentList[0];
+}
+
+
+void Segments::ToLabels(Vector<BaseFloat>& labels){
 	// NOTE: The rules of input label is as follow
 	// -1 -> overlap
 	// 0 -> nonspeech
 	// 1,2,..,n -> speaker1, speaker2, speakern   
 	// Other conditions may be added in the future. 
-	std::vector<int32> lastSegment = segments.back().second;
+	std::vector<int32> lastSegment = this->_segmentList.back().second;
 	labels.Resize(lastSegment[1]+1);
-	
-	for (size_t i=0; i<segments.size(); i++) {
-		std::vector<int32> segmentStartEnd = segments[i].second;
+	for (size_t i=0; i< this->_segmentList.size(); i++) {
+		std::vector<int32> segmentStartEnd = this->_segmentList[i].second;
 		int32 segLen = segmentStartEnd[1] - segmentStartEnd[0] + 1;
 		Vector<BaseFloat> segLabels(segLen);		
-
-		if (segments[i].first == "nonspeech") { 
+		if (this->_segmentList[i].first == "nonspeech") { 
 			segLabels.Set(0.0);
-		}else if (segments[i].first == "overlap") {
+		}else if (this->_segmentList[i].first == "overlap") {
 			segLabels.Set(-1.0);
 		}else {
-			// convert string to int
-			std::istringstream tmp(segments[i].first);
-			int32 stateInt;
-			tmp >> stateInt;
+			int32 stateInt = std::atoi(this->_segmentList[i].first.c_str());
 			segLabels.Set(stateInt);
 		}
 		labels.Range(segmentStartEnd[0],segLen).CopyFromVec(segLabels);
@@ -236,15 +120,15 @@ void Diarization::SegmentsToLabels(const segType& segments, Vector<BaseFloat>& l
 }
 
 
-void Diarization::SegmentsToRTTM(const std::string& fileName, const segType& segments, const std::string& outName) {
+void Segments::ToRTTM(const std::string& uttid, const std::string& rttmName) {
 	std::ofstream fout;
-	fout.open(outName.c_str());
-	for (size_t i =0; i < segments.size(); i++){
-		std::string spkrID = segments[i].first;
-		BaseFloat segStart = FrameIndexToSeconds(segments[i].second[0]);
-		BaseFloat segLength = FrameIndexToSeconds(segments[i].second[1]) - segStart;
+	fout.open(rttmName.c_str());
+	for (size_t i =0; i < this->_segmentList.size(); i++){
+		std::string spkrID = this->_segmentList[i].first;
+		BaseFloat segStart = FrameIndexToSeconds(this->_segmentList[i].second[0]);
+		BaseFloat segLength = FrameIndexToSeconds(this->_segmentList[i].second[1]) - segStart;
 		fout << "SPEAKER ";
-		fout << fileName << " ";
+		fout << uttid << " ";
 		fout << 1 << " ";
 		fout << std::fixed << std::setprecision(3);
 		fout << segStart << " ";
@@ -257,17 +141,235 @@ void Diarization::SegmentsToRTTM(const std::string& fileName, const segType& seg
 }
 
 
-BaseFloat Diarization::FrameIndexToSeconds(int32 frame) {
-	return frame*frameShift;
+Segments Segments::GetSpeechSegments() {
+	Segments speechSegments(_uttid);
+	for (size_t i = 0; i < this->_segmentList.size(); i++) {
+		if (this->_segmentList[i].first != "nonspeech" && this->_segmentList[i].first != "overlap") {
+			speechSegments.Append(this->_segmentList[i]);
+		}
+	}
+	return speechSegments;
 }
 
 
-void Diarization::getSpeechSegments(const segType& segments, segType& speechSegments) {
-	for (size_t i = 0; i < segments.size(); i++) {
-		if (segments[i].first != "nonspeech" && segments[i].first != "overlap") {
-			speechSegments.push_back(segments[i]);
-		}
+void Segments::ExtractIvectors(const Matrix<BaseFloat>& feats,
+							   const Posterior& posterior,
+							   const IvectorExtractor& extractor) {
+	int32 featsDim = extractor.FeatDim();
+	size_t numSegs = this->_segmentList.size();
+	for (size_t i=0; i < numSegs; i++){
+		std::string segmentLabel = this->_segmentList[i].first;
+		std::vector<int32> segmentStartEnd = this->_segmentList[i].second;
+		Matrix<BaseFloat> segFeats(segmentStartEnd[1] - segmentStartEnd[0] +1, featsDim);
+		segFeats.CopyFromMat(feats.Range(segmentStartEnd[0], segmentStartEnd[1] - segmentStartEnd[0] +1, 0, featsDim));
+
+		Posterior::const_iterator startIter = posterior.begin() + segmentStartEnd[0];
+		Posterior::const_iterator endIter = posterior.begin() + segmentStartEnd[1]+1;
+		Posterior segPosterior(startIter, endIter);
+		
+		KALDI_LOG << " Segment Range : segmentStartEnd[0]" << " <-> " << segmentStartEnd[1] << " The seg size is: " << segPosterior.size();
+		GetSegmentIvector(segFeats, segPosterior, extractor, segmentStartEnd);
 	}
+}
+
+
+void Segments::GetSegmentIvector(const Matrix<BaseFloat>& segFeats, 
+							     const Posterior& segPosterior, 
+							     const IvectorExtractor& extractor, 
+							     const std::vector<int32>& segmentStartEnd) {
+	Vector<double> ivector;
+    bool need_2nd_order_stats = false;
+    IvectorExtractorUtteranceStats utt_stats(extractor.NumGauss(),
+                                             extractor.FeatDim(),
+                                             need_2nd_order_stats);
+    utt_stats.AccStats(segFeats, segPosterior);
+    ivector.Resize(extractor.IvectorDim());
+    ivector(0) = extractor.PriorOffset();
+    extractor.GetIvectorDistribution(utt_stats, &ivector, NULL);
+    _ivectorList.push_back(ivector);
+}
+
+
+void Segments::NormalizeIvectors() {
+	// NOTE: Add variance normalization to this function. 
+	Vector<double> ivectorMean;
+	computeMean(this->_ivectorList, ivectorMean);
+	//SpMatrix<double> ivectorCovariance = computeCovariance(this->_ivectorList, ivectorMean);
+	for (size_t i = 0; i < this->_ivectorList.size(); i++) {
+		this->_ivectorList[i].AddVec(-1, ivectorMean);
+	}
+}
+
+
+void Segments::Append(segUnit& segment) {
+	this->_segmentList.push_back(segment);
+}
+
+
+void Segments::Read(const std::string& segments_rxfilename) {
+	// segments_rxfilename contains only segments information from single audio stream.
+    Input ki(segments_rxfilename);  // no binary argment: never binary.
+    std::string line;
+    /* read each line from segments file */
+    while (std::getline(ki.Stream(), line)) {
+		std::vector<std::string> split_line;
+		// Split the line by space or tab and check the number of fields in each
+		// line. There must be 4 fields--segment name , reacording wav file name,
+		// start time, end time; 5th field (speaker ID info) is optional.
+		SplitStringToVector(line, " \t\r", true, &split_line);
+		if (split_line.size() != 4 && split_line.size() != 5) {
+			KALDI_WARN << "Invalid line in segments file: " << line;
+			continue;
+		}
+
+		std::string segment = split_line[0],
+		recording = split_line[1],
+		start_str = split_line[2],
+		end_str = split_line[3];
+
+		if (this->_uttid.empty()) {
+			this->_uttid = recording;
+		}else {
+			if (this->_uttid != recording) {
+				KALDI_ERR << "Only one audio stream is permitted per segment file.";
+			}
+		}
+		  
+		// Convert the start time and endtime to real from string. Segment is
+		// ignored if start or end time cannot be converted to real.
+		double start, end;
+		if (!ConvertStringToReal(start_str, &start)) {
+			KALDI_WARN << "Invalid line in segments file [bad start]: " << line;
+			continue;
+		}
+		if (!ConvertStringToReal(end_str, &end)) {
+			KALDI_WARN << "Invalid line in segments file [bad end]: " << line;
+			continue;
+		}
+		// start time must not be negative; start time must not be greater than
+		// end time, except if end time is -1
+		if (start < 0 || (end != -1.0 && end <= 0) || ((start >= end) && (end > 0))) {
+			KALDI_WARN << "Invalid line in segments file [empty or invalid segment]: "
+		           << line;
+		continue;
+		}
+		std::string spkrLabel = "unk";  // default speaker label is unknown.
+		// if each line has 5 elements then 5th element must be speaker label
+		if (split_line.size() == 5) {
+			spkrLabel = split_line[4];
+		}
+
+		std::vector<int32> segStartEnd;
+		segStartEnd.push_back(SecondsToFrameIndex(BaseFloat(start)));
+		segStartEnd.push_back(SecondsToFrameIndex(BaseFloat(end)));
+		this->_segmentList.push_back(std::make_pair(spkrLabel,segStartEnd));
+	}	
+}
+
+
+void Segments::ReadIvectors(const std::string& ivector_rxfilename) {
+	SequentialDoubleVectorReader ivector_reader(ivector_rxfilename);
+    for (; !ivector_reader.Done(); ivector_reader.Next()) {
+        std::string ivectorKey = ivector_reader.Key();   
+        this->_ivectorList.push_back(ivector_reader.Value());
+    }
+    if (this->_ivectorList.size() != this->_segmentList.size()) {
+    	KALDI_ERR << "Number of ivectors doesn't match number of segments!";
+    }
+}
+
+
+void Segments::Write(const std::string& segments_dirname) {
+	std::string segments_wxfilename = segments_dirname + "/" + "segments_" + this->_uttid;
+	std::string segments_scpfilename = segments_dirname + "/" + "segments.scp";
+	std::ofstream fout;
+	std::ofstream fscp;
+	fout.open(segments_wxfilename.c_str());
+	fscp.open(segments_scpfilename.c_str(), std::ios::app);
+	for (size_t i =0; i < this->_segmentList.size(); i++){
+		std::string segID = makeSegKey(this->_segmentList[i].second, this->_uttid);
+		std::string spkrLabel = this->_segmentList[i].first;
+		BaseFloat segStart = FrameIndexToSeconds(this->_segmentList[i].second[0]);
+		BaseFloat segEnd = FrameIndexToSeconds(this->_segmentList[i].second[1]);
+		fout << segID << " ";
+		fout << this->_uttid << " ";
+		fout << std::fixed << std::setprecision(3);
+		fout << segStart << " ";
+		fout << segEnd << " ";
+		fout << spkrLabel << "\n";
+	}
+	fscp << segments_wxfilename << "\n";
+	fscp.close();
+	fout.close();
+}
+
+
+void Segments::WriteIvectors(const std::string& ivector_wxfilename){
+	DoubleVectorWriter ivectorWriter(ivector_wxfilename);
+	for (size_t i =0; i < this->_segmentList.size(); i++){
+		std::string segID = makeSegKey(this->_segmentList[i].second, this->_uttid);
+		if (this->_ivectorList.empty()) {
+			KALDI_ERR << "ivector list for " << this->_uttid << " Segments do not exist!"; 
+		}
+		ivectorWriter.Write(segID, this->_ivectorList[i]);
+	}
+}
+
+
+BaseFloat FrameIndexToSeconds(int32 frame) {
+	// Find corresponding start point (in seconds) of a given frame.
+	return frame*FRAMESHIFT;
+}
+
+
+std::string makeSegKey(const std::vector<int32>& segmentStartEnd, 
+				const std::string uttid) { 
+	// Make unique key for each segment of each utterance, by concatenating uttid with segment start and end
+	// Such that the key is format of "uttid_segStartFrame_segEndFrame".
+	std::string segStartEndString;
+	std::stringstream tmp; 
+	tmp << segmentStartEnd[0];
+	tmp << "_";
+	tmp << segmentStartEnd[1];
+	segStartEndString = tmp.str();
+	std::string	segID = uttid + "_" + segStartEndString;
+
+	return segID;       
+}
+
+
+std::vector<std::string>& split(const std::string& s, 
+								char delim, 
+								std::vector<std::string>& elems) {
+	// Split string by delimiter e.g., ' ', ','. 
+	// PASS output vector by reference.
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+
+std::vector<std::string> split(const std::string& s, char delim) {
+	// Split string by delimiter, e.g. ',' 
+	// CREATE output vector.
+    std::vector<std::string> elems;
+    split(s, delim, elems);
+    return elems;
+}
+
+
+std::vector<std::string> returnNonEmptyFields(const std::vector<std::string>& fields) {
+	// Return non empty elements of vector of strings.
+    std::vector<std::string> nonEmptyFields; 
+    for(size_t i = 0; i < fields.size(); i++){
+        if(fields[i] != ""){
+            nonEmptyFields.push_back(fields[i]);
+        }
+    }
+    return nonEmptyFields;
 }
 
 }

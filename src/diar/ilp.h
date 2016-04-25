@@ -23,27 +23,14 @@ class IlpCluster {
 public:
 
 	IlpCluster() { 
-		delta  = 50;
+		_delta  = 50;
 	}
-
-	// extract ivectors for all nonspeech segments
-	void ExtractSegmentIvectors(const Matrix<BaseFloat>&, const segType& , const Posterior& , const IvectorExtractor&, DoubleVectorWriter&, const std::string);
-	
-	// extract ivector for a segment
-	void GetSegmentIvector(const Matrix<BaseFloat>&, const Posterior&, const IvectorExtractor&, DoubleVectorWriter&, const std::string, const std::vector<int32>&);
-
-	// create unique key of given segment, such that the key is format of "uttid_segStartFrame_segEndFrame"
-	void makeSegKey( const std::vector<int32>& segStartEnd, const std::string uttid, std::string& segIvectorKey );
 
 	// generate ILP problem description in CPLEX LP format
 	void glpkIlpProblem(const Matrix<BaseFloat>& , std::vector<std::string>&);
 
 	// compute distant matrix from i-vector collections, return distant matrix, and list of corresponding keys of ivectors
 	void computIvectorDistMatrix(const std::vector< Vector<double> >&, Matrix<BaseFloat>&, std::vector<std::string>&);
-
-	SpMatrix<double> getCovariance(const std::vector< Vector<double> >& ivectorCollect, const Vector<double>& totalMean);
-
-	void getMean(const std::vector< Vector<double> >& ivectorCollect, Vector<double>& totalMean);
 
 	// compute the Mahalanobis distance between two i-vectors
 	BaseFloat ivectorMahalanobisDistance(const Vector<double>& ivec1, const Vector<double>& ivec2, const SpMatrix<double>& totalCov);
@@ -72,7 +59,8 @@ public:
 	// write template into filse
 	void Write(std::string outName, const std::vector<std::string>& ilpProblem);
 
-	BaseFloat delta;
+private:
+	BaseFloat _delta;
 
 };
 

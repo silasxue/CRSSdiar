@@ -38,36 +38,33 @@ run_vad(){
 }
 #run_vad
 
-test_l2s(){
-
-    #changeDetectBIC scp:data/toy/feats.scp scp:exp/vad/vad_toy.1.scp ark,scp,t:./tmp.ark,./tmp.scp
-    changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
-}
-#test_l2s
-
 test_changedetection() {
     changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
 }
-test_changedetection
+#test_changedetection
 
-test_segIvectorExtract(){
-    
-    sid/test_seg_ivector.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/test_seg_ivector
-    #ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- | ivector-normalize-length ark:- ark:- | ivectorTest ark:- ark:local/label.ark 	    		
-    ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- |  ivectorTest ark:- ark:local/label.ark 	    		
+test_ivectors(){
+    sid/test_ivector_score.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/test_seg_ivector
 }
-#test_segIvectorExtract
+#test_ivectors;
+
+IvectorExtract(){
+    sid/extract_segment_ivector.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/segment_ivectors
+}
+#IvectorExtract
 
 glpk_dir=exp/glpk
 test_glpkIlpTemplate(){
-   mkdir -p $glpk_dir; rm -f $glpk_dir/*
+   mkdir -p $glpk_dir; rm -rf $glpk_dir/*; mkdir -p exp/segment.true
 
-   ivector_feats="ark:ivector-subtract-global-mean ark:exp/test_seg_ivector/ivector.1.ark ark:- | ivector-normalize-length ark:- ark:- |"		
+   labelToSegment ark:local/label.ark exp/segment.true	
+
+   sid/generate_ILP_template.sh --nj 1 exp/extractor_1024 data/toy exp/segment.true/segments.scp $glpk_dir
    #ivector_feats="ark:exp/test_seg_ivector/ivector.1.ark"		
-   glpkIlpTemplate "$ivector_feats" $glpk_dir/glp.template
-   glpsol --lp $glpk_dir/glp.template -o $glpk_dir/glp.sol
+   #writeTemplateILP "$ivector_feats" $glpk_dir/glp.template
+   #glpsol --lp $glpk_dir/glp.template -o $glpk_dir/glp.sol
 }
-#test_glpkIlpTemplate
+test_glpkIlpTemplate
 
 rttm_dir=exp/rttm
 rttm_dir=exp/rttm

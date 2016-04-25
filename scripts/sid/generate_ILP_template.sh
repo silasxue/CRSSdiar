@@ -41,7 +41,7 @@ fi
 
 srcdir=$1
 data=$2
-label=$3
+segments=$3
 dir=$4
 
 
@@ -70,8 +70,8 @@ if [ $stage -le 0 ]; then
     fgmm-global-gselect-to-post --min-post=$min_post $srcdir/final.ubm "$feats" \
 	ark,s,cs:- ark:- \| scale-post ark:- $posterior_scale ark,t:$dir/posterior.JOB || exit 1;
 
-  $cmd JOB=1:$nj $dir/log/extract_ivectors.JOB.log \
-       segIvectorExtract "$feats" ark:$label ark,s,cs:$dir/posterior.JOB $srcdir/final.ie ark,scp,t:$dir/ivector.JOB.ark,$dir/ivector.JOB.scp || exit 1;
+  $cmd JOB=1:$nj $dir/log/generate_ILP.JOB.log \
+       writeTemplateILP $segments "$feats" ark,s,cs:$dir/posterior.JOB $srcdir/final.ie $dir/ilp.template  || exit 1;
 
 fi
 

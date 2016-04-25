@@ -1,8 +1,8 @@
 
 all:
 
-KALDI_DIR = /home/nxs113020/kaldi-trunk
-#KALDI_DIR = /home/chengzhu/work/Toolhouse/kaldi-trunk
+#KALDI_DIR = /home/nxs113020/kaldi-trunk
+KALDI_DIR = /home/chengzhu/work/Toolhouse/kaldi-trunk
 OPENFST_CXXFLAGS = 
 OPENFST_LDLIBS = 
 EXTRA_CXXFLAGS = -I${KALDI_DIR}/src
@@ -11,7 +11,7 @@ include ${KALDI_DIR}/src/kaldi.mk
 
 TESTFILES = 
 
-OBJFILES = diar-utils.o ilp.o
+OBJFILES = diar-utils.o bic.o
 
 LIBNAME = kaldi-diar
 
