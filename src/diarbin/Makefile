@@ -8,7 +8,7 @@ EXTRA_CXXFLAGS = -Wno-sign-compare -I${KALDI_DIR}/src
 include ${KALDI_DIR}/src/kaldi.mk
 
 #BINFILES = changeDetectBIC segIvectorExtract ivectorTest glpkIlpTemplate glpkToRTTM labelToRTTM
-BINFILES = changeDetectBIC ivectorTest segIvectorExtract labelToSegment writeTemplateILP
+BINFILES = changeDetectBIC ivectorTest segIvectorExtract labelToSegment writeTemplateILP glpkToRTTM labelToRTTM
 
 OBJFILES = 
 

@@ -25,36 +25,27 @@ int main(int argc, char *argv[]) {
 
     std::string glpk_rspecifier = po.GetArg(1),
                 segments_scpfile = po.GetArg(2),
-                rttm_wspecifier = po.GetArg(3);
+                rttm_outputdir = po.GetArg(3);
 
+    GlpkILP glpkObj;
+    std::vector<std::string> ilpClusterLabel = glpkObj.ReadGlpkSolution(glpk_rspecifier);
 
+    // create empty segments to store glpk ILP generated cluster label
     Input ki(segments_scpfile);  // no binary argment: never binary.
     std::string line;
+    int32 ind = 0;
     while (std::getline(ki.Stream(), line)) {
         Segments uttSegments;
         uttSegments.Read(line);
         Segments speechSegments = uttSegments.GetSpeechSegments();
-    }
-
-    std::ifstream fin;
-    fin.open(glpk_rspecifier.c_str());
-    std::string line;
-    while (std::getline(fin, line)){
-        if (line.find("*") != std::string::npos){
-            std::vector<std::string> fields = split(line, ' ');
-            std::vector<string> nonEmptyFields = returnNonEmptyFields(fields);
-            std::vector<int32> varIndex = varNameToIndex(nonEmptyFields[1]);
-            int32 k = varIndex[0];
-            int32 j = varIndex[1];
-            if (k==j  && nonEmptyFields[3] == "1") {
-                allSegments[k].first = numberToString(k);
-            }
-            if (k!=j && nonEmptyFields[3] == "1") {
-                    allSegments[k].first = numberToString(j);
-            }
+        
+        for (size_t i = 0; i < speechSegments.Size(); i++) {
+            speechSegments.SetLabel(i, ilpClusterLabel[ind]);
+            ind++;
         }
+
+        std::string rttm_wspecifier = rttm_outputdir + "/" + speechSegments.GetUttID() +".rttm";
+        speechSegments.ToRTTM(speechSegments.GetUttID(), rttm_wspecifier);
     }
-    Diarization diarObj;
-    diarObj.SegmentsToRTTM("allfile",allSegments,rttm_wspecifier);
 }
 

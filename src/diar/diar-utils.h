@@ -49,6 +49,7 @@ public:
 						   const IvectorExtractor& extractor, 
 						   const std::vector<int32>& segmentStartEnd);
 	void Append(segUnit& segment);
+	void SetLabel(int32 index, std::string label);
 	void Read(const std::string& segments_rxfilename);
 	void ReadIvectors(const std::string& ivector_rxfilename); // NOTE: Improvement needed for parallel processing
 	void Write(const std::string& segments_dirname);

@@ -21,7 +21,7 @@ typedef kaldi::int32 int32;
 
 class GlpkILP {
 public:
-	//GlpkILP() {}
+	GlpkILP() {};
 	GlpkILP(BaseFloat delta);
 	GlpkILP(Matrix<BaseFloat>& distanceMatrix, BaseFloat delta);
 
@@ -48,6 +48,9 @@ public:
 
 	// write template into filse
 	void Write(std::string outName);
+
+	// Read the ILP solution (written in glpk format)
+	std::vector<std::string> ReadGlpkSolution(std::string glpkSolutionFile);
 
 private:
 	BaseFloat _delta;

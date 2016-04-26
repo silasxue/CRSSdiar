@@ -116,4 +116,34 @@ void GlpkILP::Write(std::string outName){
 }
 
 
+std::vector<std::string> GlpkILP::ReadGlpkSolution(std::string glpkSolutionFile) {
+	std::ifstream fin;
+    fin.open(glpkSolutionFile.c_str());
+    std::string line;
+    std::vector<std::string> IlpClusterLabel;
+    while (std::getline(fin, line)){
+        if (line.find("*") != std::string::npos){
+            std::vector<std::string> fields = split(line, ' ');
+            std::vector<string> nonEmptyFields = returnNonEmptyFields(fields);
+            std::vector<int32> varIndex = varNameToIndex(nonEmptyFields[1]);
+            int32 k = varIndex[0];
+            int32 j = varIndex[1];
+            if (k==j) {
+            	if (nonEmptyFields[3] == "1") {
+                	IlpClusterLabel.push_back(numberToString(k));
+                } else {
+                	IlpClusterLabel.push_back(numberToString(-1));
+                }
+            }
+
+            if (k!=j && nonEmptyFields[3] == "1") {
+                 IlpClusterLabel[k] = numberToString(j);
+            }
+        }
+    }
+
+    return IlpClusterLabel;
+}
+
+
 }

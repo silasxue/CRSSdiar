@@ -16,7 +16,10 @@ int main(int argc, char *argv[]) {
 
     const char *usage = "Obtain glp ILP problem representation template \n";
 
+    BaseFloat delta = 30.0; 
+
     kaldi::ParseOptions po(usage);
+    po.Register("delta", &delta, "delta parameter for ILP clustering");
     po.Read(argc, argv);
 
     if (po.NumArgs() != 5) {
@@ -43,21 +46,20 @@ int main(int argc, char *argv[]) {
     while (std::getline(ki.Stream(), line)) {
         Segments uttSegments;
         uttSegments.Read(line);
-        uttSegments.GetSpeechSegments();
-        uttSegments.ExtractIvectors(feature_reader.Value(uttSegments.GetUttID()), posterior_reader.Value(uttSegments.GetUttID()), extractor);
-        uttSegments.NormalizeIvectors();
-        for (size_t i = 0; i<uttSegments.Size(); i++) {
-            ivectorCollect.push_back(uttSegments.GetIvector(i));
+        Segments speechSegments = uttSegments.GetSpeechSegments();
+        speechSegments.ExtractIvectors(feature_reader.Value(speechSegments.GetUttID()), posterior_reader.Value(speechSegments.GetUttID()), extractor);
+        speechSegments.NormalizeIvectors();
+        for (size_t i = 0; i<speechSegments.Size(); i++) {
+            ivectorCollect.push_back(speechSegments.GetIvector(i));
         }
-    }
-
+    }  
 
     // generate distant matrix from i-vectors
     Matrix<BaseFloat> distMatrix;
     computeDistanceMatrix(ivectorCollect, distMatrix);
 
     // Generate glpk format ILP problem representation
-    GlpkILP ilpObj(distMatrix, 30.0);
+    GlpkILP ilpObj(distMatrix, delta);
     ilpObj.glpkIlpProblem();
 
     // Write glpk format ILP problem template to text file

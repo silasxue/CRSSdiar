@@ -59,18 +59,19 @@ test_glpkIlpTemplate(){
 
    labelToSegment ark:local/label.ark exp/segment.true	
 
-   sid/generate_ILP_template.sh --nj 1 exp/extractor_1024 data/toy exp/segment.true/segments.scp $glpk_dir
+   sid/generate_ILP_template.sh --nj 1 --delta 25 exp/extractor_1024 data/toy exp/segment.true/segments.scp $glpk_dir
    glpsol --lp $glpk_dir/ilp.template -o $glpk_dir/glp.sol
 }
 test_glpkIlpTemplate
 
-rttm_dir=exp/rttm
-rttm_dir=exp/rttm
+rttm_dir_true=exp/rttm.true
+rttm_dir_est=exp/rttm.est
 test_DER(){
-   mkdir -p $rttm_dir; rm -f $rttm_dir/*
+   mkdir -p $rttm_dir_true; rm -f $rttm_dir_true/*
+   mkdir -p $rttm_dir_est; rm -f $rttm_dir_est/*
 
-   labelToRTTM ark:local/label.ark $rttm_dir/rttm.true	
-   glpkToRTTM $glpk_dir/glp.sol ark:local/label.ark $rttm_dir/rttm.est
-   perl local/md-eval-v21.pl -r $rttm_dir/rttm.true -s $rttm_dir/rttm.est	
+   labelToRTTM ark:local/label.ark $rttm_dir_est	
+   glpkToRTTM $glpk_dir/glp.sol exp/segment.true/segments.scp $rttm_dir_true	
+   perl local/md-eval-v21.pl -r $rttm_dir_true/IS1000b.Mix-Headset.rttm -s $rttm_dir_est/IS1000b.Mix-Headset.rttm	
 }
-#test_DER
+test_DER

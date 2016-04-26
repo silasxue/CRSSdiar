@@ -206,6 +206,10 @@ void Segments::Append(segUnit& segment) {
 }
 
 
+void Segments::SetLabel(int32 index, std::string label) {
+	this->_segmentList[index].first = label;
+}
+
 void Segments::Read(const std::string& segments_rxfilename) {
 	// segments_rxfilename contains only segments information from single audio stream.
     Input ki(segments_rxfilename);  // no binary argment: never binary.

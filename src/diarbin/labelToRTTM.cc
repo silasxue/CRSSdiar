@@ -22,19 +22,14 @@ int main(int argc, char *argv[]) {
     }
 
     std::string label_rspecifier = po.GetArg(1),
-                rttm_wspecifier = po.GetArg(2);
+                rttm_outputdir = po.GetArg(2);
 
     SequentialBaseFloatVectorReader label_reader(label_rspecifier);
 
     for (; !label_reader.Done(); label_reader.Next()) {
-
-        Diarization diarObj;
-        segType segments;
-        segType speechSegments;
-        diarObj.LabelsToSegments(label_reader.Value(), segments);
-        diarObj.getSpeechSegments(segments, speechSegments);
-
-        string uttid = label_reader.Key();
-        diarObj.SegmentsToRTTM("allfile", speechSegments, rttm_wspecifier);
+        Segments allSegments(label_reader.Value(), label_reader.Key());
+        Segments speechSegments = allSegments.GetSpeechSegments();
+        std::string rttm_wspecifier = rttm_outputdir + "/" + speechSegments.GetUttID() +".rttm";
+        speechSegments.ToRTTM(speechSegments.GetUttID(), rttm_wspecifier);
     }
 }
