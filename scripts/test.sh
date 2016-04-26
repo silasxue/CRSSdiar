@@ -55,14 +55,12 @@ IvectorExtract(){
 
 glpk_dir=exp/glpk
 test_glpkIlpTemplate(){
-   mkdir -p $glpk_dir; rm -rf $glpk_dir/*; mkdir -p exp/segment.true
+   mkdir -p $glpk_dir; rm -rf $glpk_dir/*; mkdir -p exp/segment.true; rm -f exp/segment.true/*
 
    labelToSegment ark:local/label.ark exp/segment.true	
 
    sid/generate_ILP_template.sh --nj 1 exp/extractor_1024 data/toy exp/segment.true/segments.scp $glpk_dir
-   #ivector_feats="ark:exp/test_seg_ivector/ivector.1.ark"		
-   #writeTemplateILP "$ivector_feats" $glpk_dir/glp.template
-   #glpsol --lp $glpk_dir/glp.template -o $glpk_dir/glp.sol
+   glpsol --lp $glpk_dir/ilp.template -o $glpk_dir/glp.sol
 }
 test_glpkIlpTemplate
 

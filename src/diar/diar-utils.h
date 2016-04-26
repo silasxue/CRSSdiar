@@ -70,7 +70,7 @@ std::string numberToString(T number){
 
 
 template<class T>
-SpMatrix<T> computeCovariance(std::vector< Vector<T> >& vectorOfFeatures, 
+SpMatrix<T> computeCovariance(const std::vector< Vector<T> >& vectorOfFeatures, 
 								   const Vector<T>& mean) {
 	// Compute covariance (sparse matrix) of vector of features. 
 	size_t N = vectorOfFeatures.size(); 
@@ -108,8 +108,8 @@ T logDetCovariance(Matrix<T>& data) {
 
 
 template<class T>
-void computeMean(std::vector< Vector<T> >& vectorOfFeatures,				 
-	Vector<T>& mean) {
+void computeMean(const std::vector< Vector<T> >& vectorOfFeatures,
+				 Vector<T>& mean) {
 	// Compute mean vector of features. 
 	size_t N = vectorOfFeatures.size();
 	int32 dim = vectorOfFeatures[0].Dim(); // doesn't matter which vectorOfFeatures[i] we use.
@@ -143,6 +143,15 @@ std::vector<std::string> split(const std::string& s, char delim);
 
 
 std::vector<std::string> returnNonEmptyFields(const std::vector<std::string>& fields);
+
+// compute distant matrix from i-vector collections, return distant matrix, and list of corresponding keys of ivectors
+void computeDistanceMatrix(const std::vector< Vector<double> >& vectorList, Matrix<BaseFloat>& distanceMatrix);
+
+// compute the Mahalanobis distance between two i-vectors
+BaseFloat mahalanobisDistance(const Vector<double>& v1, const Vector<double>& v2, const SpMatrix<double>& totalCov);
+
+// compute the cosine distance between two i-vectors
+BaseFloat cosineDistance(const Vector<double>& v1, const Vector<double>& v2);
 
 }
 #endif

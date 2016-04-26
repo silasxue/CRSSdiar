@@ -19,49 +19,40 @@ namespace kaldi{
 
 typedef kaldi::int32 int32;
 
-class IlpCluster {
+class GlpkILP {
 public:
-
-	IlpCluster() { 
-		_delta  = 50;
-	}
+	//GlpkILP() {}
+	GlpkILP(BaseFloat delta);
+	GlpkILP(Matrix<BaseFloat>& distanceMatrix, BaseFloat delta);
 
 	// generate ILP problem description in CPLEX LP format
-	void glpkIlpProblem(const Matrix<BaseFloat>& , std::vector<std::string>&);
-
-	// compute distant matrix from i-vector collections, return distant matrix, and list of corresponding keys of ivectors
-	void computIvectorDistMatrix(const std::vector< Vector<double> >&, Matrix<BaseFloat>&, std::vector<std::string>&);
-
-	// compute the Mahalanobis distance between two i-vectors
-	BaseFloat ivectorMahalanobisDistance(const Vector<double>& ivec1, const Vector<double>& ivec2, const SpMatrix<double>& totalCov);
-
-	// compute the cosine distance between two i-vectors
-	BaseFloat ivectorCosineDistance(const Vector<double>& , const Vector<double>& );
+	void glpkIlpProblem();
 
 	// write objective function of ILP in glpk format, refer to equation (2) in the paper [1]
-	std::string problemMinimize(const Matrix<BaseFloat>& );
+	std::string problemMinimize();
 
 	// write constraint function for unique center assigment as in equation (2.3) in the paper[1]
-	void problemConstraintsColumnSum(const Matrix<BaseFloat>&, std::vector<std::string>&);
+	void problemConstraintsColumnSum();
 
 	//  write constraint function as in equation (2.4) in the paper[1]
-	void problemConstraintsCenter(const Matrix<BaseFloat>&, std::vector<std::string>&);
+	void problemConstraintsCenter();
 
 	// list all binary variables as in equation (2.2) in the paper [1]
-	void listBinaryVariables(const Matrix<BaseFloat>, std::vector<std::string>&);
+	void listBinaryVariables();
 
 	// generate variable names represent ILP problem in glpk format
-	std::string indexToVarName( std::string, int32, int32);
+	std::string indexToVarName(std::string variableName, int32 i, int32 j);
 
 	// generate variable names represent ILP problem in glpk format
-	std::vector<int32> varNameToIndex( std::string var);
+	std::vector<int32> varNameToIndex(std::string& variableName);
 
 	// write template into filse
-	void Write(std::string outName, const std::vector<std::string>& ilpProblem);
+	void Write(std::string outName);
 
 private:
 	BaseFloat _delta;
-
+	std::vector<std::string> _problem;
+	Matrix<BaseFloat> _distanceMatrix;
 };
 
 }

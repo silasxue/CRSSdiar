@@ -75,9 +75,5 @@ if [ $stage -le 0 ]; then
 
 fi
 
-if [ $stage -le 1 ]; then
-  echo "$0: combining iVectors across jobs"
-  for j in $(seq $nj); do cat $dir/ivector.$j.scp; done >$dir/ivector.scp || exit 1;
-fi
 
 
