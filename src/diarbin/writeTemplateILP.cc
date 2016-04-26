@@ -5,10 +5,10 @@
 #include "util/common-utils.h"
 #include "base/kaldi-common.h"
 #include "ivector/ivector-extractor.h"
-#include "diar/ilp.h"
 #include "diar/diar-utils.h"
 #include "gmm/am-diag-gmm.h"
 #include "hmm/posterior.h"
+#include "diar/ilp.h"
 
 int main(int argc, char *argv[]) {
     typedef kaldi::int32 int32;
@@ -16,7 +16,10 @@ int main(int argc, char *argv[]) {
 
     const char *usage = "Obtain glp ILP problem representation template \n";
 
+    BaseFloat delta = 30.0; 
+
     kaldi::ParseOptions po(usage);
+    po.Register("delta", &delta, "delta parameter for ILP clustering");
     po.Read(argc, argv);
 
     if (po.NumArgs() != 5) {
@@ -41,38 +44,26 @@ int main(int argc, char *argv[]) {
     Input ki(segments_scpfile);  // no binary argment: never binary.
     std::string line;
     while (std::getline(ki.Stream(), line)) {
-        string uttid = line;
         Segments uttSegments;
-        uttSegments.Read(segments_scpfile);
-        uttSegments.GetSpeechSegments();
-        uttSegments.ExtractIvectors(feature_reader.Value(uttSegments.GetUttID()), posterior_reader.Value(uttSegments.GetUttID()), extractor);
-        for (size_t i = 0; i<uttSegments.Size(); i++) {
-            ivectorCollect.push_back(uttSegments.GetIvector(i));
+        uttSegments.Read(line);
+        Segments speechSegments = uttSegments.GetSpeechSegments();
+        speechSegments.ExtractIvectors(feature_reader.Value(speechSegments.GetUttID()), posterior_reader.Value(speechSegments.GetUttID()), extractor);
+        speechSegments.NormalizeIvectors();
+        for (size_t i = 0; i<speechSegments.Size(); i++) {
+            ivectorCollect.push_back(speechSegments.GetIvector(i));
         }
-    }
+    }  
 
-    KALDI_LOG << ivectorCollect.size();
+    // generate distant matrix from i-vectors
+    Matrix<BaseFloat> distMatrix;
+    computeDistanceMatrix(ivectorCollect, distMatrix);
 
+    // Generate glpk format ILP problem representation
+    GlpkILP ilpObj(distMatrix, delta);
+    ilpObj.glpkIlpProblem();
 
-    // // collect i-vectors from speech segments
-    // for (; !ivector_reader.Done(); ivector_reader.Next()) {
-    //     string ivectorKey = ivector_reader.Key();   
-    //     ivectorKeyList.push_back(ivectorKey);
-    //     ivectorCollect.push_back(ivector_reader.Value());
-    // }
-
-    // // generate distant matrix from i-vectors
-    // Matrix<BaseFloat> distMatrix;
-    // ilpObj.computIvectorDistMatrix(ivectorCollect, distMatrix, ivectorKeyList);
-
-    // // Generate glpk format ILP problem representation
-    // std::vector<std::string> ilpProblem;
-    // ilpObj.glpkIlpProblem(distMatrix, ilpProblem);
-
-    // // Write glpk format ILP problem template to text file
-    // {
-    //     ilpObj.Write(ilpTemplateOutfile, ilpProblem);
-    // }
-
-    // KALDI_LOG << "Written ILP optimization problem template to " << ilpTemplateOutfile;
+    // Write glpk format ILP problem template to text file
+    ilpObj.Write(ilpTemplate_wspecifier);
+    
+    KALDI_LOG << "Written ILP optimization problem template to " << ilpTemplate_wspecifier;
 }

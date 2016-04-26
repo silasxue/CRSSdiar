@@ -29,7 +29,6 @@ int main(int argc, char *argv[]) {
 
     for (; !label_reader.Done(); label_reader.Next()) {
         Segments allSegments(label_reader.Value(), label_reader.Key());
-        Segments speechSegments = allSegments.GetSpeechSegments();
-        speechSegments.Write(segments_dirname);
+        allSegments.Write(segments_dirname);
     }
 }

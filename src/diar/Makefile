@@ -11,7 +11,7 @@ include ${KALDI_DIR}/src/kaldi.mk
 
 TESTFILES = 
 
-OBJFILES = diar-utils.o bic.o
+OBJFILES = diar-utils.o bic.o ilp.o
 
 LIBNAME = kaldi-diar
 

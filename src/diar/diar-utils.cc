@@ -206,6 +206,10 @@ void Segments::Append(segUnit& segment) {
 }
 
 
+void Segments::SetLabel(int32 index, std::string label) {
+	this->_segmentList[index].first = label;
+}
+
 void Segments::Read(const std::string& segments_rxfilename) {
 	// segments_rxfilename contains only segments information from single audio stream.
     Input ki(segments_rxfilename);  // no binary argment: never binary.
@@ -371,6 +375,52 @@ std::vector<std::string> returnNonEmptyFields(const std::vector<std::string>& fi
     }
     return nonEmptyFields;
 }
+
+
+void computeDistanceMatrix(const std::vector< Vector<double> >& vectorList, Matrix<BaseFloat>& distanceMatrix) {
+	distanceMatrix.Resize(vectorList.size(),vectorList.size());
+	// Calculate total mean and covariance:
+	Vector<double> vectorMean;
+	computeMean(vectorList, vectorMean);
+	SpMatrix<double> vectorCovariance = computeCovariance(vectorList, vectorMean);
+	for (size_t i=0; i<vectorList.size();i++){
+		for (size_t j=0;j<vectorList.size();j++){
+			if (i == j){
+				distanceMatrix(i,j) = 0;
+			}else{
+				distanceMatrix(i,j) = mahalanobisDistance(vectorList[i], vectorList[j], vectorCovariance);
+			}
+		}
+	}
+}
+
+
+BaseFloat mahalanobisDistance(const Vector<double>& v1, const Vector<double>& v2, const SpMatrix<double>& totalCov) {
+
+	Vector<double> iv1(v1.Dim());
+	iv1.CopyFromVec(v1);
+	Vector<double> iv2(v2.Dim());
+	iv2.CopyFromVec(v2);
+	SpMatrix<double> Sigma(v2.Dim());
+	Sigma.CopyFromSp(totalCov);
+	Sigma.Invert();
+	iv1.AddVec(-1.,iv2);
+
+	// Now, calculate the quadratic term: (iv1 - iv2)^T Sigma (iv1-iv2)
+	Vector<double> S_iv1(iv1.Dim());
+		S_iv1.AddSpVec(1.0, Sigma, iv1, 0.0);
+		return sqrt(VecVec(iv1, S_iv1));
+}
+
+
+BaseFloat cosineDistance(const Vector<double>& v1, const Vector<double>& v2) {
+	 BaseFloat dotProduct = VecVec(v1, v2);
+	 BaseFloat norm1 = VecVec(v1, v1) + FLT_EPSILON;
+	 BaseFloat norm2 = VecVec(v2, v2) + FLT_EPSILON;
+
+	 return dotProduct / (sqrt(norm1)*sqrt(norm2));  
+}
+
 
 }
 
