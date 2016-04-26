@@ -41,17 +41,17 @@ run_vad(){
 test_changedetection() {
     changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
 }
-#test_changedetection
+test_changedetection
 
 test_ivectors(){
     sid/test_ivector_score.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/test_seg_ivector
 }
-#test_ivectors;
+test_ivectors;
 
 IvectorExtract(){
     sid/extract_segment_ivector.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/segment_ivectors
 }
-#IvectorExtract
+IvectorExtract
 
 glpk_dir=exp/glpk
 test_glpkIlpTemplate(){
