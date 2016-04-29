@@ -6,9 +6,9 @@ import os
 
 meetings = sys.argv[1]
 fin = open(meetings)
-annotations_dir = "/corpora/ami/annotations/segments/"
-audio_dir = "/scratch2/share/nxs113020/amicorpus_mixedHeadset/"
-file_dump = "/erasable/nxs113020/ami/"
+annotations_dir = "/home/nxs113020/Downloads/ami_dir/segments/"
+audio_dir = "/home/nxs113020/Downloads/ami_dir/amicorpus_mixedHeadset/"
+file_dump = "/home/nxs113020/features/ami_dump/"
 fjobs = open("./xml2txt.jobs",'w')
 flabels = open("./seg2labels.jobs",'w')
 for i in fin:
@@ -22,7 +22,7 @@ for i in fin:
     for j in files:
         base_name = j.split('/')[-1].split('.xml')[0]
         txt_name = file_dump+base_name+'.txt'
-        shell_cmd = "bash /scratch2/nxs113020/CRSSdiar/scripts/local/segXML2TXT.sh "+j+" "+txt_name
+        shell_cmd = "bash segXML2TXT.sh "+j+" "+txt_name
         fjobs.write(shell_cmd+'\n')
         fout.write(txt_name+"\n")
     shell_cmd = "ls "+audio_dir+session+"/audio/*.wav"
@@ -31,11 +31,11 @@ for i in fin:
     fout.write(wavfile+"\n")
     fout.close()
     
-    shell_cmd = ". ~/.bashrc;python /scratch2/nxs113020/CRSSdiar/scripts/local/seg2frame.py "+ \
-                file_dump+"/segmentTXT_"+session+".txt "+file_dump+"/labels_"+session+".txt 0"
+    shell_cmd = "python seg2frame.py "+ file_dump+"/segmentTXT_"+session+\
+                ".txt "+file_dump+"/labels_"+session+".txt 0"
     flabels.write(shell_cmd+"\n")
 flabels.close()
 fjobs.close()
 
-os.system("~/bin/myJsplit -M 300 -b 1 -n ami_segs xml2txt.jobs")
-os.system("~/bin/myJsplit -M 300 -b 1 -n seg2labels seg2labels.jobs")
+os.system("bash xml2txt.jobs")
+os.system("bash seg2labels.jobs")
