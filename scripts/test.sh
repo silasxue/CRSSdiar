@@ -19,59 +19,91 @@ set -e # exit on error
 
 run_mfcc(){
     mfccdir=mfcc
-    for x in toy; do
+    for x in IS100.small; do
       steps/make_mfcc.sh --cmd "$train_cmd" --nj 1 data/$x exp/make_mfcc/$x $mfccdir || exit 1;
       steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir || exit 1;
-      #utils/fix_data_dir.sh data/$x
     done
 }
-#run_mfcc
+run_mfcc
 
 run_vad(){
-
     log_start "Doing VAD"	
 
-    vaddir=exp/vad	
-    sid/compute_vad_decision.sh --nj 1 data/toy $vaddir/log $vaddir 	
-
+    for x in IS100.small; do
+   	 vaddir=exp/vad/$x
+   	 diar/compute_vad_decision.sh --nj 1 data/$x $vaddir/log $vaddir 	
+    done	
     log_end "Finish VAD"	
 }
-#run_vad
+run_vad
 
-test_changedetection() {
-    changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
-}
-#test_changedetection
+make_ref(){
+    log_start "Generate Reference Segments/Labels/RTTM files"	
 
-test_ivectors(){
-    sid/test_ivector_score.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/test_seg_ivector
+    ami_annotated_segment=/home/chengzhu/work/SpeechCorpus/ami_dir/segments	
+
+    for x in IS100.small; do
+    	local/make_ami_ref.sh data/$x $ami_annotated_segment exp/ref/$x 
+    done	
+
+    log_end "Generate Reference Segments/Labels/RTTM files"	
 }
+make_ref
+
+#test_ivectors(){
+#    sid/test_ivector_score.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/test_seg_ivector
+#}
 #test_ivectors;
 
-IvectorExtract(){
-    sid/extract_segment_ivector.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/segment_ivectors
-}
+#IvectorExtract(){
+#    sid/extract_segment_ivector.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/segment_ivectors
+#}
 #IvectorExtract
 
-glpk_dir=exp/glpk
-test_glpkIlpTemplate(){
-   mkdir -p $glpk_dir; rm -rf $glpk_dir/*; mkdir -p exp/segment.true; rm -f exp/segment.true/*
+run_changedetection() {
+    log_start "Run Change Detection Using BIC"	
 
-   labelToSegment ark:local/label.ark exp/segment.true	
-
-   sid/generate_ILP_template.sh --nj 1 --delta 25 exp/extractor_1024 data/toy exp/segment.true/segments.scp $glpk_dir
-   glpsol --lp $glpk_dir/ilp.template -o $glpk_dir/glp.sol
+    for x in IS100.small; do
+	change_detect_bic.sh data/$x exp/ref/$x exp/change_detect/$x
+    	#changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
+    done
+	
+    log_end "Run Change Detection Using BIC"	
 }
-test_glpkIlpTemplate
+run_changedetection
 
-rttm_dir_true=exp/rttm.true
-rttm_dir_est=exp/rttm.est
-test_DER(){
-   mkdir -p $rttm_dir_true; rm -f $rttm_dir_true/*
-   mkdir -p $rttm_dir_est; rm -f $rttm_dir_est/*
+run_glpkIlpTemplate(){
+    log_start "Generate GLPK Template of ILP problem "	
 
-   labelToRTTM ark:local/label.ark $rttm_dir_est	
-   glpkToRTTM $glpk_dir/glp.sol exp/segment.true/segments.scp $rttm_dir_true	
-   perl local/md-eval-v21.pl -r $rttm_dir_true/IS1000b.Mix-Headset.rttm -s $rttm_dir_est/IS1000b.Mix-Headset.rttm	
+    for x in IS100.small; do
+   	diar/generate_ILP_template.sh --nj 1 --delta 20 exp/extractor_1024 data/$x exp/ref/$x/segment exp/glpk_template/$x
+    done
+
+    log_end "Generate GLPK Template of ILP problem "	
 }
-test_DER
+#run_glpkIlpTemplate
+
+run_glpk_Ilp(){
+    log_start "Run ILP Clustering"	
+
+    for x in IS100.small; do
+	diar/ILP_clustering.sh exp/glpk_template/$x exp/glpk_ilp/$x
+   	#glpsol --lp exp/glpk/$x -o exp/glpk/$x
+       #glpkToRTTM $glpk_dir/glp.sol exp/segment.true/segments.scp $rttm_dir_true	
+    done
+
+    log_end "Run ILP Clustering"	
+}
+#run_glpk_Ilp
+
+run_DER(){
+    log_start "Compute Diarization Error Rate (DER)"	
+ 
+    for x in IS100.small; do
+       diar/compute_DER.sh $exp/glpk_ilp/$x/rttm $exp/result_DER/$x/rttm	
+       #perl local/md-eval-v21.pl -r $rttm_dir_true/IS1000b.Mix-Headset.rttm -s $rttm_dir_est/IS1000b.Mix-Headset.rttm
+    done	
+
+    log_end "Compute Diarization Error Rate (DER)"	
+}
+#run_DER
