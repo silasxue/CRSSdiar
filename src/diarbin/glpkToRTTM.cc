@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 
     std::string glpk_rspecifier = po.GetArg(1),
                 segments_scpfile = po.GetArg(2),
-                rttm_outputdir = po.GetArg(3);
+                rttm_scpfile = po.GetArg(3);
 
     GlpkILP glpkObj;
     std::vector<std::string> ilpClusterLabel = glpkObj.ReadGlpkSolution(glpk_rspecifier);
@@ -33,6 +33,10 @@ int main(int argc, char *argv[]) {
     // create empty segments to store glpk ILP generated cluster label
     Input ki(segments_scpfile);  // no binary argment: never binary.
     std::string line;
+
+    Input ko(rttm_scpfile);
+    std::string rttm_filename;
+
     int32 ind = 0;
     while (std::getline(ki.Stream(), line)) {
         Segments uttSegments;
@@ -44,8 +48,8 @@ int main(int argc, char *argv[]) {
             ind++;
         }
 
-        std::string rttm_wspecifier = rttm_outputdir + "/" + speechSegments.GetUttID() +".rttm";
-        speechSegments.ToRTTM(speechSegments.GetUttID(), rttm_wspecifier);
+        std::getline(ko.Stream(), rttm_filename);
+        speechSegments.ToRTTM(speechSegments.GetUttID(), rttm_filename);
     }
 }
 

@@ -1,8 +1,8 @@
 
 all:
 
-KALDI_DIR = /home/nxs113020/kaldi-trunk
-#KALDI_DIR = /home/chengzhu/work/Toolhouse/kaldi-trunk
+#KALDI_DIR = /home/nxs113020/kaldi-trunk
+KALDI_DIR = /home/chengzhu/work/Toolhouse/kaldi-trunk
 
 EXTRA_CXXFLAGS = -Wno-sign-compare -I${KALDI_DIR}/src
 include ${KALDI_DIR}/src/kaldi.mk

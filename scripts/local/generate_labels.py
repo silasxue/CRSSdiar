@@ -35,7 +35,7 @@ for i in fin:
     fout.close()
     
     shell_cmd = "python local/seg2frame.py "+ file_dump+"/segmentTXT_"+session+\
-                ".txt "+file_dump+"/labels_"+session+".txt 0"
+                ".txt "+file_dump+"/"+session+".label 0"
     flabels.write(shell_cmd+"\n")
 flabels.close()
 fjobs.close()
