@@ -30,7 +30,7 @@ fi
 
 srcdir=$1
 data=$2
-segments=$3
+segment_dir=$3
 dir=$4
 
 
@@ -39,7 +39,7 @@ for f in $srcdir/final.ie $srcdir/final.ubm $data/feats.scp ; do
 done
 
 # Set various variables.
-mkdir -p $dir/log; mkdir -p $dir/post; rm -f $dir/log/*; rm -f $dir/post/*; rm -f $dir/gplk.template.ilp
+mkdir -p $dir/log; mkdir -p $dir/post; rm -f $dir/log/*; rm -f $dir/post/*; rm -f $dir/glpk.template.ilp
 sdata=$data/split$nj;
 utils/split_data.sh $data $nj || exit 1;
 
@@ -59,7 +59,7 @@ if [ $stage -le 0 ]; then
 	ark,s,cs:- ark:- \| scale-post ark:- $posterior_scale ark,t:$dir/post/posterior.JOB || exit 1;
 
   $cmd JOB=1:$nj $dir/log/generate_ILP.JOB.log \
-     writeTemplateILP --delta=$delta $segments "$feats" ark,s,cs:$dir/post/posterior.JOB $srcdir/final.ie $dir/gplk.template.ilp  || exit 1;
+     writeTemplateILP --delta=$delta $segment_dir/segments.scp "$feats" ark,s,cs:$dir/post/posterior.JOB $srcdir/final.ie $dir/glpk.template.ilp  || exit 1;
 
 fi
 

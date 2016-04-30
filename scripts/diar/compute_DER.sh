@@ -26,18 +26,20 @@ match_dir=$2
 result_dir=$3
 
 
-for f in $ref_dir/rttm.scp $match_dir/rttm.scp; do
+for f in $ref_dir/rttms.scp $match_dir/rttms.scp; do
   if [ ! -f $f ]; then
-    echo "Generate rttm.scp file for either reference or matching does not exist"
+    echo "Generate rttms.scp file for either reference or matching does not exist"
     exit 1;
   fi
 done
 
 mkdir -p $result_dir/log; rm -f $result_dir/* ; rm -f $result_dir/log/*
 
-for x in $match_dir/rttm.scp; do
-    cat $match_dir/$x >> $result_dir/match.rttm
-    cat $ref_dir/$x >> $result_dir/ref.rttm
+for x in `cat $match_dir/rttms.scp`; do
+    utt=`basename $x`
+	
+    cat $match_dir/$utt >> $result_dir/match.rttm
+    cat $ref_dir/$utt >> $result_dir/ref.rttm
 done
 
 perl local/md-eval-v21.pl -r $result_dir/ref.rttm -s $result_dir/match.rttm 2>&1 | tee $result_dir/diar_err   	

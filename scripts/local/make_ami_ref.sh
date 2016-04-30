@@ -11,8 +11,8 @@ mkdir -p $label_dir/tmp/ # to store all temp files.
 python local/generate_labels.py $data_dir/wav.scp $xml_dir $label_dir/tmp/
 bash $label_dir/tmp/xml2txt.jobs
 bash $label_dir/tmp/seg2labels.jobs
-mv $label_dir/tmp/labels_*.txt $label_dir/
-ls $PWD/$label_dir/labels_*.txt | sort -u > $label_dir/labels.scp
+mv $label_dir/tmp/*.label $label_dir/
+ls $PWD/$label_dir/*.label | sort -u > $label_dir/labels.scp
 rm -rf $label_dir/tmp
 
 
@@ -33,7 +33,7 @@ rm -rf $segment_dir/tmp
 
 
 ## Generate rttm:
-rttm_dir=$out_dir/rttm/
+rttm_dir=$out_dir/rttms/
 if [ -f $rttm_dir/rttms.scp ]; then
     rm $rttm_dir/rttms.scp
 fi

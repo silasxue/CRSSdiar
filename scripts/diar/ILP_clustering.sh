@@ -28,11 +28,14 @@ dir=$3
 
 
 # Set various variables.
-mkdir -p $dir/log; mkdir -p $dir/rttm; rm -f $dir/log/*; rm -f $dir/rttm/*
+mkdir -p $dir/log; mkdir -p $dir/rttms; rm -f $dir/log/*; rm -f $dir/rttms/*
 
 # Perform ILP clustering using GLPK tool
-glpsol --lp $srcdir/glpk.ilp.template -o $dir/glpk.ilp.solution 2>&1 | tee $dir/log/glpk.ilp.log
+glpsol --lp $srcdir/glpk.template.ilp -o $dir/glpk.ilp.solution 2>&1 | tee $dir/log/glpk.ilp.log
+
+# Generate filename scp contains the filenames that to be created using glpkToRTTM
+cat $segdir/segments.scp | xargs -I {} basename {} .seg | awk -v var=$dir/rttms/ '{print var $1 ".rttm"}' > $dir/rttms/rttms.scp
 
 # Interperate ILP clustering result in GLPK format into rttm for compute DER infuture
-glpkToRTTM $dir/glpk.ilp.solution $segdir/segments.scp $dir/rttm
+glpkToRTTM $dir/glpk.ilp.solution $segdir/segments.scp $dir/rttms/rttms.scp
 

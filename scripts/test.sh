@@ -18,18 +18,22 @@ log_end(){
 set -e # exit on error
 
 run_mfcc(){
+    log_start "Extract MFCC features"	
+
     mfccdir=mfcc
-    for x in IS100.small; do
+    for x in toy IS100.small; do
       steps/make_mfcc.sh --cmd "$train_cmd" --nj 1 data/$x exp/make_mfcc/$x $mfccdir || exit 1;
       steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir || exit 1;
     done
+
+    log_end "Extract MFCC features"	
 }
 run_mfcc
 
 run_vad(){
     log_start "Doing VAD"	
 
-    for x in IS100.small; do
+    for x in toy IS100.small; do
    	 vaddir=exp/vad/$x
    	 diar/compute_vad_decision.sh --nj 1 data/$x $vaddir/log $vaddir 	
     done	
@@ -42,7 +46,7 @@ make_ref(){
 
     ami_annotated_segment=/home/chengzhu/work/SpeechCorpus/ami_dir/segments	
 
-    for x in IS100.small; do
+    for x in toy IS100.small; do
     	local/make_ami_ref.sh data/$x $ami_annotated_segment exp/ref/$x 
     done	
 
@@ -63,47 +67,45 @@ make_ref
 run_changedetection() {
     log_start "Run Change Detection Using BIC"	
 
-    for x in IS100.small; do
+    for x in toy IS100.small; do
 	change_detect_bic.sh data/$x exp/ref/$x exp/change_detect/$x
     	#changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
     done
 	
     log_end "Run Change Detection Using BIC"	
 }
-run_changedetection
+#run_changedetection
 
 run_glpkIlpTemplate(){
     log_start "Generate GLPK Template of ILP problem "	
 
-    for x in IS100.small; do
-   	diar/generate_ILP_template.sh --nj 1 --delta 20 exp/extractor_1024 data/$x exp/ref/$x/segment exp/glpk_template/$x
+    for x in toy IS100.small; do
+   	diar/generate_ILP_template.sh --nj 1 --delta 20 exp/extractor_1024 data/$x exp/ref/$x/segments exp/glpk_template/$x
     done
 
     log_end "Generate GLPK Template of ILP problem "	
 }
-#run_glpkIlpTemplate
+run_glpkIlpTemplate
 
 run_glpk_Ilp(){
     log_start "Run ILP Clustering"	
 
-    for x in IS100.small; do
-	diar/ILP_clustering.sh exp/glpk_template/$x exp/glpk_ilp/$x
-   	#glpsol --lp exp/glpk/$x -o exp/glpk/$x
-       #glpkToRTTM $glpk_dir/glp.sol exp/segment.true/segments.scp $rttm_dir_true	
+    for x in toy IS100.small; do
+	diar/ILP_clustering.sh exp/glpk_template/$x exp/ref/$x/segments exp/glpk_ilp/$x
     done
 
     log_end "Run ILP Clustering"	
 }
-#run_glpk_Ilp
+run_glpk_Ilp
 
 run_DER(){
     log_start "Compute Diarization Error Rate (DER)"	
  
-    for x in IS100.small; do
-       diar/compute_DER.sh $exp/glpk_ilp/$x/rttm $exp/result_DER/$x/rttm	
+    for x in toy IS100.small; do
+       diar/compute_DER.sh exp/glpk_ilp/$x/rttms exp/ref/$x/rttms exp/result_DER/$x	
        #perl local/md-eval-v21.pl -r $rttm_dir_true/IS1000b.Mix-Headset.rttm -s $rttm_dir_est/IS1000b.Mix-Headset.rttm
     done	
 
     log_end "Compute Diarization Error Rate (DER)"	
 }
-#run_DER
+run_DER

@@ -284,7 +284,7 @@ void Segments::ReadIvectors(const std::string& ivector_rxfilename) {
 
 
 void Segments::Write(const std::string& segments_dirname) {
-	std::string segments_wxfilename = segments_dirname + "/" + "segments_" + this->_uttid;
+	std::string segments_wxfilename = segments_dirname + "/" + this->_uttid + ".seg";
 	std::string segments_scpfilename = segments_dirname + "/" + "segments.scp";
 	std::ofstream fout;
 	std::ofstream fscp;
