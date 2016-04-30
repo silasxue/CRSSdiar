@@ -4,10 +4,19 @@ data_dir=$1 # kaldi format data directory
 xml_dir=$2 # AMI segments directory
 out_dir=$3
 
+echo "writing reference functions in $out_dir"
+
 ## Generate labels:
 label_dir=$out_dir/labels/
-mkdir -p $label_dir
+echo "Labels: $label_dir"
+if [ -d $label_dir ]; then
+    rm -rf $label_dir
+fi
 mkdir -p $label_dir/tmp/ # to store all temp files.
+echo "wav.scp: "
+echo "*****"
+cat $data_dir/wav.scp
+echo "*****"
 python local/generate_labels.py $data_dir/wav.scp $xml_dir $label_dir/tmp/
 bash $label_dir/tmp/xml2txt.jobs
 bash $label_dir/tmp/seg2labels.jobs
@@ -18,11 +27,9 @@ rm -rf $label_dir/tmp
 
 ## Generate segments:
 segment_dir=$out_dir/segments/
-if [ -f $segment_dir/segments.scp ]; then
-    rm $segment_dir/segments.scp
-fi
-if [ -d $segment_dir/tmp ]; then
-   rm -rf $segment_dir/tmp
+echo "Segments: $segment_dir"
+if [ -d $segment_dir ]; then
+    rm -rf $segment_dir
 fi
 mkdir -p $segment_dir/tmp/
 while read f;do
@@ -34,11 +41,9 @@ rm -rf $segment_dir/tmp
 
 ## Generate rttm:
 rttm_dir=$out_dir/rttms/
-if [ -f $rttm_dir/rttms.scp ]; then
-    rm $rttm_dir/rttms.scp
-fi
-if [ -d $rttm_dir/tmp ]; then
-    rm -rf $rttm_dir/tmp
+echo "RTTMs: $rttm_dir"
+if [ -d $rttm_dir ]; then
+    rm -rf $rttm_dir
 fi
 mkdir -p $rttm_dir/tmp/
 while read f;do
