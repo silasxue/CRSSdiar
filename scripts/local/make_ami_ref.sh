@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#! /bin/bash
 
 data_dir=$1 # kaldi format data directory
 xml_dir=$2 # AMI segments directory
