@@ -48,9 +48,15 @@ if __name__=='__main__':
         line = i.strip()
         for j in open(line):
             line_list = j.strip().split(' ')
-            channel = int(line_list[0])
-            start_t = float(line_list[1])
-            end_t   = float(line_list[2])
+            for k in line_list:
+                try:
+                    channel = int(line_list[0])
+                    start_t = float(line_list[1])
+                    end_t   = float(line_list[2])
+                except:
+                    channel = int(line_list[2])
+                    start_t = float(line_list[0])
+                    end_t   = float(line_list[1])
             start_f,end_f = time2frame(start_t,end_t,inc)
             all_files[channel][start_f:end_f] = 1
 
