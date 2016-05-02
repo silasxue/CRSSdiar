@@ -92,6 +92,8 @@ fi
 # plot true/false hypotheses: (P(d|H0) and P(d|H1)):
 grep "TRUE Cosine scores" $dir/log/ivector_score.1.log > $dir/tmp/true_scores
 grep "FALSE Cosine scores" $dir/log/ivector_score.1.log > $dir/tmp/false_scores
+grep "TRUE Mahalanobis scores" $dir/log/ivector_score.1.log > $dir/tmp/true_scores
+grep "FALSE Mahalanobis scores" $dir/log/ivector_score.1.log > $dir/tmp/false_scores
 python local/plot_distributions.py $dir/tmp/true_scores $dir/tmp/false_scores
 
 #rm -rf $dir/tmp

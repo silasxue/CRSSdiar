@@ -59,7 +59,7 @@ test_ivectors(){
         diar/test_ivector_score.sh --nj 1 exp/extractor_1024 data/$x exp/ref/$x/labels exp/temp/test_ivectors
     done
 }
-test_ivectors;
+#test_ivectors;
 #
 #IvectorExtract(){
 #    sid/extract_segment_ivector.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/segment_ivectors
@@ -86,7 +86,7 @@ run_glpkIlpTemplate(){
 
     log_end "Generate GLPK Template of ILP problem "	
 }
-#run_glpkIlpTemplate
+run_glpkIlpTemplate
 
 run_glpk_Ilp(){
     log_start "Run ILP Clustering"	
@@ -97,7 +97,7 @@ run_glpk_Ilp(){
 
     log_end "Run ILP Clustering"	
 }
-#run_glpk_Ilp
+run_glpk_Ilp
 
 run_DER(){
     log_start "Compute Diarization Error Rate (DER)"	
@@ -109,4 +109,4 @@ run_DER(){
 
     log_end "Compute Diarization Error Rate (DER)"	
 }
-#run_DER
+run_DER
