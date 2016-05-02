@@ -45,6 +45,16 @@ int main(int argc, char *argv[]) {
         Segments speechSegments = allSegments.GetSpeechSegments();
         speechSegments.ExtractIvectors(feature_reader.Value(),posterior_reader.Value(label_reader.Key()),extractor);
         speechSegments.NormalizeIvectors();
+
+        std::vector< Vector<double> > ivectorCollect;
+        // read in segments from each file
+        for (size_t i = 0; i<speechSegments.Size(); i++) {
+            ivectorCollect.push_back(speechSegments.GetIvector(i));
+        }
+        Vector<double> totalMean;
+        computeMean(ivectorCollect, totalMean);
+        SpMatrix<double> totalCov = computeCovariance(ivectorCollect, 
+                                   totalMean);
         for (size_t i=0; i<loopMax;i++){
             for (size_t j=0; j<loopMax;j++){
                 std::string jLabel = speechSegments.SegKey(j);
@@ -53,19 +63,25 @@ int main(int argc, char *argv[]) {
                     const Vector<double> &iIvector = speechSegments.GetIvector(i);
                     const Vector<double> &jIvector = speechSegments.GetIvector(j);
                     BaseFloat dotProduct = VecVec(iIvector, jIvector);
-                    TrueScore += dotProduct; TureCount++;
+                    //TrueScore += dotProduct; TureCount++;
                     //KALDI_LOG << "TRUE Target: " << iSegmentKey << " vs " << jSegmentKey << ":" << dot_prod;
+                    BaseFloat distance = mahalanobisDistance(iIvector, jIvector, totalCov);
+                    KALDI_LOG << "TRUE Mahalanobis scores: " << distance;
+                    KALDI_LOG << "TRUE Cosine scores: " << dotProduct;
                 }
                 if (i != j && iLabel != jLabel && iLabel != "nonspeech" && iLabel != "overlap" && jLabel != "nonspeech" && jLabel != "overlap") {
                     const Vector<double> &iIvector = speechSegments.GetIvector(i);
                     const Vector<double> &jIvector = speechSegments.GetIvector(j);
                     BaseFloat dotProduct = VecVec(iIvector, jIvector);
-                    FalseScore += dotProduct; FalseCount++;
+                    //FalseScore += dotProduct; FalseCount++;
                     //KALDI_LOG << "FALSE ERROR: " << iSegmentKey << " vs " << jSegmentKey << ":" << dot_prod;
+                    BaseFloat distance = mahalanobisDistance(iIvector, jIvector, totalCov);
+                    KALDI_LOG << "FALSE Mahalanobis scores: " << distance;
+                    KALDI_LOG << "FALSE Cosine scores: " << dotProduct;
                 }
             }
         }
-        feature_reader.Next();
+        //feature_reader.Next();
     }
     KALDI_LOG << "Total Sum Of TRUE Target Score: " << TrueScore/TureCount;
     KALDI_LOG << "Total Sum Of False Detection Score: " << FalseScore/FalseCount;

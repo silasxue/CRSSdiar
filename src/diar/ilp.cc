@@ -15,10 +15,12 @@ GlpkILP::GlpkILP(BaseFloat delta) {
 	this->_delta = delta;
 }
 
+
 GlpkILP::GlpkILP(Matrix<BaseFloat>& distanceMatrix, BaseFloat delta) {
 	this->_distanceMatrix = distanceMatrix;
 	this->_delta = delta;
 }
+
 
 void GlpkILP::glpkIlpProblem() {
 	this->_problem.push_back("Minimize");
@@ -26,9 +28,27 @@ void GlpkILP::glpkIlpProblem() {
 	this->_problem.push_back("Subject To");
 	problemConstraintsColumnSum();
 	problemConstraintsCenter();
+	//distanceUpperBound();
 	this->_problem.push_back("Binary");
 	listBinaryVariables();
 	this->_problem.push_back("End");
+}
+
+void GlpkILP::distanceUpperBound() {
+	int32 n = this->_distanceMatrix.NumRows();
+	for (size_t i = 0; i < this->_distanceMatrix.NumRows(); i++) {
+		for (size_t j = 0; j < this->_distanceMatrix.NumRows(); j++) {
+			if (i != j) {
+				BaseFloat d = this->_distanceMatrix(i, j);
+				std::string constraint = "C" + \
+						numberToString(n) + \
+				 		": " + numberToString(d) + " " + indexToVarName("x",i,j);
+				constraint += " < " + numberToString(this->_delta);
+				this->_problem.push_back(constraint);
+				n++;
+			}
+		}
+	}
 }
 
 std::string GlpkILP::problemMinimize() {
@@ -40,6 +60,7 @@ std::string GlpkILP::problemMinimize() {
 		for (size_t j = 0; j < this->_distanceMatrix.NumRows(); j++) {
 			if (i != j) {
 				BaseFloat d = this->_distanceMatrix(i, j) / this->_delta;
+				// Why did we need to assure d > 0 ?
 				if ((d > 0) && (d <= 1)) {
 					objective += " + " + numberToString(d) + " " + indexToVarName("x",i,j);
 				}

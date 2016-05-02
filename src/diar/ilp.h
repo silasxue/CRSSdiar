@@ -37,8 +37,12 @@ public:
 	//  write constraint function as in equation (2.4) in the paper[1]
 	void problemConstraintsCenter();
 
+	// explicitly enforce distance upperbound (eq. 1.5) in paper [1]
+	void distanceUpperBound();
+
 	// list all binary variables as in equation (2.2) in the paper [1]
 	void listBinaryVariables();
+
 
 	// generate variable names represent ILP problem in glpk format
 	std::string indexToVarName(std::string variableName, int32 i, int32 j);
