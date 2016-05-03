@@ -420,8 +420,8 @@ BaseFloat mahalanobisDistance(const Vector<double>& v1, const Vector<double>& v2
 
 	// Now, calculate the quadratic term: (iv1 - iv2)^T Sigma (iv1-iv2)
 	Vector<double> S_iv1(iv1.Dim());
-		S_iv1.AddSpVec(1.0, Sigma, iv1, 0.0);
-		return sqrt(VecVec(iv1, S_iv1));
+	S_iv1.AddSpVec(1.0, Sigma, iv1, 0.0);
+	return sqrt(VecVec(iv1, iv1));
 }
 
 

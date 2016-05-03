@@ -44,7 +44,7 @@ run_vad(){
 make_ref(){
     log_start "Generate Reference Segments/Labels/RTTM files"	
 
-    ami_annotated_segment=/home/chengzhu/work/SpeechCorpus/ami_dir/segments	
+    ami_annotated_segment=/home/chengzhu/work/SpeechCorpus/ami_dir/segments
 
     for x in toy IS1000a; do
     	local/make_ami_ref.sh data/$x $ami_annotated_segment exp/ref/$x 
@@ -54,10 +54,11 @@ make_ref(){
 }
 #make_ref
 
-#test_ivectors(){
-#    sid/test_ivector_score.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/test_seg_ivector
-#}
-#test_ivectors;
+test_ivectors(){
+    for x in toy_2; do
+        diar/test_ivector_score.sh --nj 1 exp/extractor_1024 data/$x exp/ref/$x/labels exp/temp/test_ivectors
+    done
+}
 
 #IvectorExtract(){
 #    sid/extract_segment_ivector.sh --nj 1 exp/extractor_1024 data/toy local/label.ark exp/segment_ivectors
@@ -67,9 +68,8 @@ make_ref(){
 run_changedetection() {
     log_start "Run Change Detection Using BIC"	
 
-    for x in toy IS100.small; do
-	change_detect_bic.sh data/$x exp/ref/$x exp/change_detect/$x
-    	#changeDetectBIC scp:data/toy/feats.scp ark:local/label.ark ark,scp,t:./tmp.ark,./tmp.scp
+    for x in toy_2; do
+	    local/change_detect_bic.sh data/$x exp/ref/$x exp/change_detect/$x
     done
 	
     log_end "Run Change Detection Using BIC"	
@@ -90,7 +90,7 @@ train_extractor(){
       --ivector-dim $ivdim --num-iters 5 exp/full_ubm_${ubmdim}/final.ubm data/ES20 \
       exp/extractor_ES20 || exit 1;
 }
-#atrain_extractor
+#train_extractor
 
 run_glpkIlpTemplate(){
     log_start "Generate GLPK Template of ILP problem "	

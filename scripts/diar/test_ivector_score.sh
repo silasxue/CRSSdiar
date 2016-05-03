@@ -41,13 +41,26 @@ fi
 
 srcdir=$1
 data=$2
-label=$3
+label_dir=$3
 dir=$4
 
 
 for f in $srcdir/final.ie $srcdir/final.ubm $data/feats.scp ; do
   [ ! -f $f ] && echo "No such file $f" && exit 1;
 done
+
+if [ ! -d $dir/tmp ]; then
+    mkdir -p $dir/tmp
+fi
+
+if [ -f $dir/tmp/labels.ark ]; then
+    rm  $dir/tmp/labels.ark
+fi
+
+while read x;do
+    cat $x >> $dir/tmp/labels.ark
+done<$label_dir/labels.scp
+
 
 # Set various variables.
 mkdir -p $dir/log
@@ -71,8 +84,18 @@ if [ $stage -le 0 ]; then
 	ark,s,cs:- ark:- \| scale-post ark:- $posterior_scale ark,t:$dir/posterior.JOB || exit 1;
 
   $cmd JOB=1:$nj $dir/log/ivector_score.JOB.log \
-    ivectorTest ark:$label "$feats" ark,s,cs:$dir/posterior.JOB $srcdir/final.ie || exit 1;
+    ivectorTest ark:$dir/tmp/labels.ark "$feats" ark,s,cs:$dir/posterior.JOB $srcdir/final.ie || exit 1;
 
 fi
+
+
+# plot true/false hypotheses: (P(d|H0) and P(d|H1)):
+grep "TRUE Cosine scores" $dir/log/ivector_score.1.log > $dir/tmp/true_scores
+grep "FALSE Cosine scores" $dir/log/ivector_score.1.log > $dir/tmp/false_scores
+grep "TRUE Mahalanobis scores" $dir/log/ivector_score.1.log > $dir/tmp/true_scores
+grep "FALSE Mahalanobis scores" $dir/log/ivector_score.1.log > $dir/tmp/false_scores
+python local/plot_distributions.py $dir/tmp/true_scores $dir/tmp/false_scores
+
+#rm -rf $dir/tmp
 
 
