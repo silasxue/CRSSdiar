@@ -11,6 +11,7 @@
 nj=1
 cmd="run.pl"
 stage=0
+seg_min=0
 num_gselect=20 # Gaussian-selection using diagonal model: number of Gaussians to select
 min_post=0.025 # Minimum posterior to use (posteriors below this are pruned out)
 posterior_scale=1.0 # This scale helps to control for successve features being highly
@@ -59,7 +60,7 @@ if [ $stage -le 0 ]; then
 	ark,s,cs:- ark:- \| scale-post ark:- $posterior_scale ark,t:$dir/post/posterior.JOB || exit 1;
 
   $cmd JOB=1:$nj $dir/log/generate_ILP.JOB.log \
-     writeTemplateILP --delta=$delta $segment_dir/segments.scp "$feats" ark,s,cs:$dir/post/posterior.JOB $srcdir/final.ie $dir/glpk.template.ilp  || exit 1;
+     writeTemplateILP --delta=$delta --seg_min=$seg_min $segment_dir/segments.scp "$feats" ark,s,cs:$dir/post/posterior.JOB $srcdir/final.ie $dir/glpk.template.ilp  || exit 1;
 
 fi
 

@@ -10,6 +10,7 @@
 # Begin configuration section.
 nj=1
 cmd="run.pl"
+seg_min=0
 # End configuration section.
 
 echo "$0 $@"  # Print the command line for logging
@@ -37,5 +38,5 @@ glpsol --lp $srcdir/glpk.template.ilp -o $dir/glpk.ilp.solution 2>&1 | tee $dir/
 cat $segdir/segments.scp | xargs -I {} basename {} .seg | awk -v var=$dir/rttms/ '{print var $1 ".rttm"}' > $dir/rttms/rttms.scp
 
 # Interperate ILP clustering result in GLPK format into rttm for compute DER infuture
-glpkToRTTM $dir/glpk.ilp.solution $segdir/segments.scp $dir/rttms/rttms.scp
+glpkToRTTM --seg_min=$seg_min $dir/glpk.ilp.solution $segdir/segments.scp $dir/rttms/rttms.scp
 

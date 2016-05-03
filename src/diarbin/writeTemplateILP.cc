@@ -16,10 +16,12 @@ int main(int argc, char *argv[]) {
 
     const char *usage = "Obtain glp ILP problem representation template \n";
 
-    BaseFloat delta = 30.0; 
+    BaseFloat delta = 30.0;
+    int32 seg_min = 0; 
 
     kaldi::ParseOptions po(usage);
     po.Register("delta", &delta, "delta parameter for ILP clustering");
+    po.Register("seg_min", &seg_min, "segment with minimum of length seg_min is allowed for ILP");
     po.Read(argc, argv);
 
     if (po.NumArgs() != 5) {
@@ -47,10 +49,19 @@ int main(int argc, char *argv[]) {
         Segments uttSegments;
         uttSegments.Read(line);
         Segments speechSegments = uttSegments.GetSpeechSegments();
-        speechSegments.ExtractIvectors(feature_reader.Value(speechSegments.GetUttID()), posterior_reader.Value(speechSegments.GetUttID()), extractor);
-        speechSegments.NormalizeIvectors();
-        for (size_t i = 0; i<speechSegments.Size(); i++) {
-            ivectorCollect.push_back(speechSegments.GetIvector(i));
+        if ( seg_min > 0 ) {
+            Segments largeSpeechSegments = speechSegments.GetLargeSegments(seg_min);
+            largeSpeechSegments.ExtractIvectors(feature_reader.Value(largeSpeechSegments.GetUttID()), posterior_reader.Value(largeSpeechSegments.GetUttID()), extractor);
+            largeSpeechSegments.NormalizeIvectors();
+            for (size_t i = 0; i<largeSpeechSegments.Size(); i++) {
+                ivectorCollect.push_back(largeSpeechSegments.GetIvector(i));
+            }
+        } else{
+            speechSegments.ExtractIvectors(feature_reader.Value(speechSegments.GetUttID()), posterior_reader.Value(speechSegments.GetUttID()), extractor);
+            speechSegments.NormalizeIvectors();
+            for (size_t i = 0; i<speechSegments.Size(); i++) {
+                ivectorCollect.push_back(speechSegments.GetIvector(i));
+            }
         }
     }  
 

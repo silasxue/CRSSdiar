@@ -151,6 +151,18 @@ Segments Segments::GetSpeechSegments() {
 	return speechSegments;
 }
 
+Segments Segments::GetLargeSegments(int32 segMin) {
+	Segments largeSegments(_uttid);
+	for (size_t i = 0; i < this->_segmentList.size(); i++) {
+		segUnit currSeg = this->_segmentList[i];
+		int32 currSegSize = currSeg.second[1] - currSeg.second[0] + 1;
+		if (currSegSize >= segMin) {
+			largeSegments.Append(this->_segmentList[i]);
+		}
+	}
+	return largeSegments;
+}
+
 
 void Segments::ExtractIvectors(const Matrix<BaseFloat>& feats,
 							   const Posterior& posterior,
@@ -252,7 +264,7 @@ void Segments::Read(const std::string& segments_rxfilename) {
 		}
 		// start time must not be negative; start time must not be greater than
 		// end time, except if end time is -1
-		if (start < 0 || (end != -1.0 && end <= 0) || ((start >= end) && (end > 0))) {
+		if (start < 0 || (end != -1.0 && end <= 0) || ((start > end) && (end > 0))) {
 			KALDI_WARN << "Invalid line in segments file [empty or invalid segment]: "
 		           << line;
 		continue;

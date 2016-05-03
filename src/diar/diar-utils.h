@@ -41,6 +41,7 @@ public:
 	void ToLabels(Vector<BaseFloat>&);
 	void ToRTTM(const std::string& uttid, const std::string& rttmName);
 	Segments GetSpeechSegments();
+	Segments GetLargeSegments(int32 segMin);
 	void ExtractIvectors(const Matrix<BaseFloat>& feats,
 						 const Posterior& posterior,
 						 const IvectorExtractor& extractor);

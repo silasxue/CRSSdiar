@@ -15,7 +15,10 @@ int main(int argc, char *argv[]) {
 
     const char *usage = "Convert gplk output into RTTM format for compute DER \n";
 
+    int32 seg_min = 0;
+
     kaldi::ParseOptions po(usage);
+    po.Register("seg_min", &seg_min, "segment with minimum of length seg_min is allowed for ILP");
     po.Read(argc, argv);
 
     if (po.NumArgs() != 3) {
@@ -41,15 +44,25 @@ int main(int argc, char *argv[]) {
     while (std::getline(ki.Stream(), line)) {
         Segments uttSegments;
         uttSegments.Read(line);
-        Segments speechSegments = uttSegments.GetSpeechSegments();
-        
-        for (size_t i = 0; i < speechSegments.Size(); i++) {
-            speechSegments.SetLabel(i, ilpClusterLabel[ind]);
-            ind++;
-        }
 
-        std::getline(ko.Stream(), rttm_filename);
-        speechSegments.ToRTTM(speechSegments.GetUttID(), rttm_filename);
+        if ( seg_min > 0 ){
+            Segments speechSegments = uttSegments.GetSpeechSegments();
+            Segments largeSpeechSegments = speechSegments.GetLargeSegments(seg_min);
+            for (size_t i = 0; i < largeSpeechSegments.Size(); i++) {
+                largeSpeechSegments.SetLabel(i, ilpClusterLabel[ind]);
+                ind++;
+            }
+            std::getline(ko.Stream(), rttm_filename);
+            largeSpeechSegments.ToRTTM(largeSpeechSegments.GetUttID(), rttm_filename);
+        } else {
+            Segments speechSegments = uttSegments.GetSpeechSegments();
+            for (size_t i = 0; i < speechSegments.Size(); i++) {
+                speechSegments.SetLabel(i, ilpClusterLabel[ind]);
+                ind++;
+            }
+            std::getline(ko.Stream(), rttm_filename);
+            speechSegments.ToRTTM(speechSegments.GetUttID(), rttm_filename);
+        }
     }
 }
 
