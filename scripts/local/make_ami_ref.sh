@@ -4,6 +4,8 @@ data_dir=$1 # kaldi format data directory
 xml_dir=$2 # AMI segments directory
 out_dir=$3
 
+source path.sh
+
 echo "writing reference functions in $out_dir"
 
 ## Generate labels:
@@ -52,3 +54,21 @@ done<$label_dir/labels.scp
 labelToRTTM ark:$rttm_dir/tmp/labels.txt $rttm_dir
 rm -rf $rttm_dir/tmp
 ls $PWD/$rttm_dir/*.rttm | sort -u > $rttm_dir/rttms.scp
+
+
+## Generate true vad labels:
+vad_label_dir=$out_dir/vad_label/
+if [ -d $vad_label_dir ]; then
+    rm -rf $vad_label_dir
+fi
+mkdir -p $vad_label_dir
+while read f;do
+    bname=`basename $f` 
+    sed 's/\ [2-9]/\ 1/g' $f > $vad_label_dir/$bname
+done<$label_dir/labels.scp
+cat $vad_label_dir/* > $vad_label_dir/vad_labels.ark
+copy-vector ark:$vad_label_dir/vad_labels.ark ark,scp:$vad_label_dir/tmp.ark,$vad_label_dir/vad_labels.scp
+mkdir -p $vad_label_dir/segments
+echo $vad_label_dir
+labelToSegment ark:$vad_label_dir/tmp.ark $vad_label_dir/segments/
+

@@ -8,9 +8,15 @@ if [ -d $out_dir ]; then
     rm -rf $out_dir
 fi
 mkdir -p $out_dir/tmp
-while read x;do
-    cat $x >> $out_dir/tmp/labels.ark
-done<$ref_dir/labels/labels.scp
+mkdir -p $out_dir/segments
 
-changeDetectBIC scp:$data_dir/feats.scp ark:$out_dir/tmp/labels.ark ark,scp,t:$out_dir/bic.ark,$out_dir/bic.scp
+#while read x;do
+#    #cat $x >> $out_dir/tmp/labels.ark
+#done<$ref_dir/labels/labels.scp
+
+#copy-vector scp:exp/vad/toy/vad_toy.1.scp ark,t:$out_dir/tmp/labels.ark
+#copy-vector scp:labels.scp ark,t:$out_dir/tmp/labels.ark
+#copy-vector ark:lab ark,t:$out_dir/tmp/labels.ark
+
+changeDetectBIC scp:$data_dir/feats.scp scp:$ref_dir/vad_label/vad_labels.scp $out_dir/segments
 rm -rf $out_dir/tmp
