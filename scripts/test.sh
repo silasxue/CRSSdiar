@@ -28,7 +28,7 @@ run_mfcc(){
 
     log_end "Extract MFCC features"	
 }
-#run_mfcc
+run_mfcc
 
 run_vad(){
     log_start "Doing VAD"	
@@ -44,7 +44,8 @@ run_vad(){
 make_ref(){
     log_start "Generate Reference Segments/Labels/RTTM files"	
 
-    ami_annotated_segment=/home/chengzhu/work/SpeechCorpus/ami_dir/segments
+    #ami_annotated_segment=/home/chengzhu/work/SpeechCorpus/ami_dir/segments
+    ami_annotated_segment=/home/nxs113020/Downloads/ami_dir/segments
 
     for x in toy_3; do
     	local/make_ami_ref.sh data/$x $ami_annotated_segment exp/ref/$x 
@@ -52,7 +53,7 @@ make_ref(){
 
     log_end "Generate Reference Segments/Labels/RTTM files"	
 }
-#make_ref
+make_ref
 
 test_ivectors(){
     for x in toy_3; do
@@ -69,13 +70,13 @@ test_ivectors(){
 run_changedetection() {
     log_start "Run Change Detection Using BIC"	
 
-    for x in toy_2; do
+    for x in toy_3; do
 	    local/change_detect_bic.sh data/$x exp/ref/$x exp/change_detect/$x
     done
 	
     log_end "Run Change Detection Using BIC"	
 }
-#run_changedetection
+run_changedetection
 
 train_extractor(){
     ubmdim=1024
@@ -96,32 +97,36 @@ train_extractor(){
 run_glpkIlpTemplate(){
     log_start "Generate GLPK Template of ILP problem "	
 
-    for x in toy_2; do
-   	    diar/generate_ILP_template.sh --nj 1 --seg_min 50 --delta 10 exp/extractor_1024 data/$x exp/ref/$x/segments exp/glpk_template/$x
+    for x in toy_3; do
+   	    #diar/generate_ILP_template.sh --nj 1 --seg_min 0 --delta 30 exp/extractor_1024.swbd data/$x exp/ref/$x/segments exp/glpk_template/$x
+    	#diar/generate_ILP_template.sh --nj 1 --seg_min 50 --delta 30 exp/extractor_1024.swbd data/$x exp/change_detect/$x/segments exp/glpk_template/$x
+   	    diar/generate_ILP_template.sh --nj 1 --seg_min 0 --delta 30 exp/extractor_1024.swbd data/$x exp/ref/$x/vad_label/segments exp/glpk_template/$x
     done
 
     log_end "Generate GLPK Template of ILP problem "	
 }
-run_glpkIlpTemplate
+#run_glpkIlpTemplate
 
 run_glpk_Ilp(){
     log_start "Run ILP Clustering"	
 
-    for x in toy_2; do
-	diar/ILP_clustering.sh --seg_min 50 exp/glpk_template/$x exp/ref/$x/segments exp/glpk_ilp/$x
+    for x in toy_3; do
+	    #diar/ILP_clustering.sh --seg_min 0 exp/glpk_template/$x exp/ref/$x/segments exp/glpk_ilp/$x
+	    #diar/ILP_clustering.sh --seg_min 50 exp/glpk_template/$x exp/change_detect/$x/segments exp/glpk_ilp/$x
+	    diar/ILP_clustering.sh --seg_min 0 exp/glpk_template/$x exp/ref/$x/vad_label/segments exp/glpk_ilp/$x
     done
 
     log_end "Run ILP Clustering"	
 }
-run_glpk_Ilp
+#run_glpk_Ilp
 
 run_DER(){
     log_start "Compute Diarization Error Rate (DER)"	
  
-    for x in toy_2; do
+    for x in toy_3; do
        diar/compute_DER.sh exp/ref/$x/rttms exp/glpk_ilp/$x/rttms exp/result_DER/$x	
     done	
 
     log_end "Compute Diarization Error Rate (DER)"	
 }
-run_DER
+#run_DER

@@ -24,11 +24,10 @@ int main(int argc, char *argv[]) {
 
     std::string feature_rspecifier = po.GetArg(1),
     	        label_rspecifier = po.GetArg(2),
-    	        label_wspecifier = po.GetArg(3);
+    	        segments_dirname = po.GetArg(3);
 
     SequentialBaseFloatMatrixReader feature_reader(feature_rspecifier);
     SequentialBaseFloatVectorReader label_reader(label_rspecifier);
-    BaseFloatVectorWriter label_writer(label_wspecifier);
 
     for (; !feature_reader.Done(); feature_reader.Next()) {
 
@@ -50,15 +49,9 @@ int main(int argc, char *argv[]) {
         Vector<BaseFloat> bicLabels;
         bicSegments.ToLabels(bicLabels);
 
-        label_writer.Write(key, bicLabels);
-        label_reader.Next();
-
-        speechSegments.ToRTTM(key, "tmp.rttm");
-        bicSegments.ToRTTM(key, "tmp1.rttm");
-
-        bicSegments.Write("tmp.seg");
-
+        bicSegments.Write(segments_dirname);
         KALDI_LOG << "bic false alarms:" << bicObj.CompareSegments(speechSegments, bicSegments);
 
+        label_reader.Next();
     }
 }
