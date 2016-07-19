@@ -2,6 +2,7 @@
 
 import sys
 import pylab 
+import numpy as np
 
 def read_scores(fin):
     out_list = []
@@ -23,7 +24,14 @@ fa = read_scores(ffalse)
 ffalse.close()
 
 
-pylab.hist(fa,100)
-pylab.hist(tr,100)
+x1 = np.array(fa)
+x1 = x1.reshape((len(fa),1))
+x2 = np.array(tr)
+x2 = x2.reshape((len(tr),1))
+print x1.shape, x2.shape
+x  = np.hstack((x1[:min(len(fa),len(tr))],x2[:min(len(fa),len(tr))]))
+print x.shape
+labels = ['non-target', 'target']
+pylab.hist(x,100, normed=1, color=['red','chartreuse'], histtype='bar', label=labels)
+pylab.legend(prop={'size': 10})
 pylab.show()
-
