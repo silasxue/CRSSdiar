@@ -17,7 +17,7 @@ log_end(){
 
 set -e # exit on error
 
-data="toy_3"
+data="toy_1"
 run_mfcc(){
     log_start "Extract MFCC features"
 
@@ -95,13 +95,17 @@ train_extractor(){
       exp/extractor_ES20 || exit 1;
 }
 #train_extractor
+
 run_glpkIlpTemplate(){
     log_start "Generate GLPK Template of ILP problem "
 
     datadir=$1
     for x in $datadir; do
-        diar/generate_ILP_template.sh --nj 1 --seg_min 50 --delta 30 exp/extractor_1024 data/$x exp/change_detect/$x/segments
+        diar/generate_ILP_template.sh --nj 1 --seg_min 50 --delta 30 \
+            exp/extractor_1024 data/$x exp/change_detect/$x/segments exp/glpk_template/$x
+
     done
+
 
     log_end "Generate GLPK Template of ILP problem "
 }
@@ -138,7 +142,8 @@ run_diarization(){
     nfiles=`local/split_data_dir.sh data/$datadir | cut -d ' ' -f 1`
     fileidx=1
     while [ $fileidx -le $nfiles ]; do
-        run_changedetection $datadir_file_$fileidx
+        make_ref ${datadir}_file_${fileidx}
+        run_changedetection ${datadir}_file_${fileidx}
         fileidx=$[$fileidx+1]
     done
 }
