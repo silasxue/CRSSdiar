@@ -32,6 +32,7 @@ dir=$3
 mkdir -p $dir/log; mkdir -p $dir/rttms; rm -f $dir/log/*; rm -f $dir/rttms/*
 
 # Perform ILP clustering using GLPK tool
+echo "glpsol --lp $srcdir/glpk.template.ilp -o $dir/glpk.ilp.solution 2>&1 | tee $dir/log/glpk.ilp.log"
 glpsol --lp $srcdir/glpk.template.ilp -o $dir/glpk.ilp.solution 2>&1 | tee $dir/log/glpk.ilp.log
 
 # Generate filename scp contains the filenames that to be created using glpkToRTTM

@@ -49,10 +49,8 @@ make_ref(){
     #ami_annotated_segment=/home/chengzhu/work/SpeechCorpus/ami_dir/segments
     ami_annotated_segment=/home/nxs113020/Downloads/ami_dir/segments
 
-    datadir=$1
-    for x in $datadir; do
-        local/make_ami_ref.sh data/$x $ami_annotated_segment exp/ref/$x
-    done
+    x=$1
+    local/make_ami_ref.sh data/$x $ami_annotated_segment exp/ref/$x
 
     log_end "Generate Reference Segments/Labels/RTTM files"
 }
@@ -60,10 +58,8 @@ make_ref(){
 
 test_ivectors(){
 
-    datadir=$1
-    for x in $datadir; do
-        diar/test_ivector_score.sh --nj 1 exp/extractor_1024 data/$x exp/ref/$x/labels exp/temp/test_ivectors
-    done
+    x=$1
+    diar/test_ivector_score.sh --nj 1 exp/extractor_1024 data/$x exp/ref/$x/labels exp/temp/test_ivectors
 }
 #test_ivectors $data
 
@@ -71,10 +67,8 @@ test_ivectors(){
 run_changedetection() {
     log_start "Run Change Detection Using BIC"
 
-    datadir=$1
-    for x in $datadir; do
-        local/change_detect_bic.sh data/$x exp/ref/$x exp/change_detect/$x
-    done
+    x=$1
+    local/change_detect_bic.sh data/$x exp/ref/$x exp/change_detect/$x
 
     log_end "Run Change Detection Using BIC"
 }
@@ -99,13 +93,9 @@ train_extractor(){
 run_glpkIlpTemplate(){
     log_start "Generate GLPK Template of ILP problem "
 
-    datadir=$1
-    for x in $datadir; do
-        diar/generate_ILP_template.sh --nj 1 --seg_min 50 --delta 30 \
-            exp/extractor_1024 data/$x exp/change_detect/$x/segments exp/glpk_template/$x
-
-    done
-
+    x=$1
+    diar/generate_ILP_template.sh --nj 1 --seg_min 50 --delta 30 \
+      exp/extractor_1024 data/$x exp/change_detect/$x/segments exp/glpk_template/$x
 
     log_end "Generate GLPK Template of ILP problem "
 }
@@ -114,10 +104,8 @@ run_glpkIlpTemplate(){
 run_glpk_Ilp(){
     log_start "Run ILP Clustering"
 
-    datadir=$1
-    for x in $datadir; do
-        diar/ILP_clustering.sh --seg_min 50 exp/glpk_template/$x exp/change_detect/$x/segments exp/glpk_ilp/$x
-    done
+    x=$1
+    diar/ILP_clustering.sh --seg_min 50 exp/glpk_template/$x exp/change_detect/$x/segments exp/glpk_ilp/$x
 
     log_end "Run ILP Clustering"
 }
@@ -125,10 +113,8 @@ run_glpk_Ilp(){
 
 run_DER(){
     log_start "Compute Diarization Error Rate (DER)"
-    datadir=$1
-    for x in $datadir; do
-       diar/compute_DER.sh exp/ref/$x/rttms exp/glpk_ilp/$x/rttms exp/result_DER/$x
-    done
+    x=$1    
+    diar/compute_DER.sh exp/ref/$x/rttms exp/glpk_ilp/$x/rttms exp/result_DER/$x
 
     log_end "Compute Diarization Error Rate (DER)"
 }
@@ -142,8 +128,12 @@ run_diarization(){
     nfiles=`local/split_data_dir.sh data/$datadir | cut -d ' ' -f 1`
     fileidx=1
     while [ $fileidx -le $nfiles ]; do
-        make_ref ${datadir}_file_${fileidx}
-        run_changedetection ${datadir}_file_${fileidx}
+        #make_ref ${datadir}_file_${fileidx}
+        #run_changedetection ${datadir}_file_${fileidx}
+        #test_ivectors ${datadir}_file_${fileidx}
+        #run_glpkIlpTemplate ${datadir}_file_${fileidx}
+        run_glpk_Ilp ${datadir}_file_${fileidx}
+        run_DER ${datadir}_file_${fileidx}
         fileidx=$[$fileidx+1]
     done
 }
