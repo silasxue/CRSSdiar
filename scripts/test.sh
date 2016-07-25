@@ -90,6 +90,15 @@ train_extractor(){
 }
 #train_extractor
 
+too_long(){
+    x=$1
+    n_samples=`cat data/$x/wav.scp | cut -d ' ' -f 4 | perl -ne 'if(m/(\S+)/){print \`soxi -s $1\`}'`
+    is_too_long=0
+    if [ $n_samples -gt 35000000 ]; then
+       is_too_long=1 
+    fi 
+    echo "$is_too_long"
+}
 run_glpkIlpTemplate(){
     log_start "Generate GLPK Template of ILP problem "
 
@@ -132,8 +141,11 @@ run_diarization(){
         #run_changedetection ${datadir}_file_${fileidx}
         #test_ivectors ${datadir}_file_${fileidx}
         #run_glpkIlpTemplate ${datadir}_file_${fileidx}
-        run_glpk_Ilp ${datadir}_file_${fileidx}
-        run_DER ${datadir}_file_${fileidx}
+        long=$(too_long ${datadir}_file_${fileidx})
+        if [ $long -eq 0 ]; then
+            run_glpk_Ilp ${datadir}_file_${fileidx}
+            run_DER ${datadir}_file_${fileidx}
+        fi
         fileidx=$[$fileidx+1]
     done
 }
