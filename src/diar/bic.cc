@@ -93,7 +93,6 @@ std::pair<int32, BaseFloat> BIC::ComputeBIC(Window& win,
 											int32 resolution) {
 	// Return <index, value> pair. index being the location of the maximum BIC and value being the maximum value of DeltaBIC computed
 	// over window. 
-
 	if (win.End() > features.NumRows()) {
 		// Condition added to fix bug. Sometimes, in the last segment, 
 		// window end exceeds feature size. This check makes sure the 
@@ -153,13 +152,13 @@ BaseFloat BIC::CompareSegments(const Segments& refSegments, const Segments& bicS
 
 
 Window::Window(const int32 start, const int32 length) {
-	this->_start = start;
+	this->_start = std::max(0,start);
 	this->_end 	= start+length;
 }
 
 
 void Window::ResetWindow(const int32 start, const int32 length) {
-	this->_start = start;
+	this->_start = std::max(0,start);
 	this->_end 	= start+length;
 }
 
@@ -192,10 +191,10 @@ void Window::ShiftWindow(int32 N) {
 
 void Window::CenterWindow(int32 center, int32 length){
 	if (length % 2 == 0) {
-		this->_start = center - length/2;
+		this->_start = std::max(0,center - length/2);
 		this->_end = center + length/2;
 	} else {
-		this->_start = center - length/2;
+		this->_start = std::max(0,center - length/2);
 		this->_end = center + length/2 + 1;
 	}
 }

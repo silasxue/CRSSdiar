@@ -137,15 +137,15 @@ run_diarization(){
     nfiles=`local/split_data_dir.sh data/$datadir | cut -d ' ' -f 1`
     fileidx=1
     while [ $fileidx -le $nfiles ]; do
-        make_ref ${datadir}_file_${fileidx}
-        run_changedetection ${datadir}_file_${fileidx}
+        #make_ref ${datadir}_file_${fileidx}
+        #run_changedetection ${datadir}_file_${fileidx}
         #test_ivectors ${datadir}_file_${fileidx}
-        #long=$(too_long ${datadir}_file_${fileidx})
-        #if [ $long -eq 0 ]; then
-        #    run_glpkIlpTemplate ${datadir}_file_${fileidx}
-        #    run_glpk_Ilp ${datadir}_file_${fileidx}
-        #    run_DER ${datadir}_file_${fileidx}
-        #fi
+        long=$(too_long ${datadir}_file_${fileidx})
+        if [ $long -eq 0 ]; then
+            run_glpkIlpTemplate ${datadir}_file_${fileidx}
+            run_glpk_Ilp ${datadir}_file_${fileidx}
+            run_DER ${datadir}_file_${fileidx}
+        fi
         fileidx=$[$fileidx+1]
     done
     
