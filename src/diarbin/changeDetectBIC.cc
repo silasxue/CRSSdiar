@@ -28,16 +28,14 @@ int main(int argc, char *argv[]) {
 
     SequentialBaseFloatMatrixReader feature_reader(feature_rspecifier);
     SequentialBaseFloatVectorReader label_reader(label_rspecifier);
-
     for (; !feature_reader.Done(); feature_reader.Next()) {
-
-    	std::string key = feature_reader.Key();
+        std::string key = feature_reader.Key();
         KALDI_LOG << key;
-    	if(label_reader.Key() == key){
-    		//KALDI_ERR << "Feature and label mismatch";
+        if(label_reader.Key() == key){
+            //KALDI_ERR << "Feature and label mismatch";
         }    
-        	
-    	Segments allSegments(label_reader.Value(), key); // Speech/Nonspeech/Overlap segmentations
+            
+        Segments allSegments(label_reader.Value(), key); // Speech/Nonspeech/Overlap segmentations
         Segments speechSegments = allSegments.GetSpeechSegments();
         const Matrix<BaseFloat> &mat = feature_reader.Value();
 

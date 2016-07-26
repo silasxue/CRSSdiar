@@ -28,7 +28,7 @@ void BIC::BICSegmentation(const Segments& uttSegments,
 	// Pefroming BIC change detection for each segments of given utterance
 	for (size_t i = 0; i < uttSegments.Size(); i++) {
 		segUnit seg = uttSegments.GetSeg(i);
-		SplitSegment(seg, feats, bicSegments);
+		SplitSegment(seg, feats, bicSegments);		
 	}
 }
 
@@ -37,6 +37,7 @@ bool BIC::SplitSegment(const segUnit& origSegment,
 					   const Matrix<BaseFloat>& feats, 
 					   Segments& bicSegments) {
 	// Perform BIC change dectect in single speech segment.
+	// Segments are shorter speech slices usually obtained from VAD. 
 	std::vector<int32> segment = origSegment.second;
 	int32 endStream = segment[1];
 	int32 startStream = segment[0];
@@ -92,6 +93,13 @@ std::pair<int32, BaseFloat> BIC::ComputeBIC(Window& win,
 											int32 resolution) {
 	// Return <index, value> pair. index being the location of the maximum BIC and value being the maximum value of DeltaBIC computed
 	// over window. 
+
+	if (win.End() > features.NumRows()) {
+		// Condition added to fix bug. Sometimes, in the last segment, 
+		// window end exceeds feature size. This check makes sure the 
+		// window is always within feature bounds.
+		win.ResetWindow(win.Start(), features.NumRows() - win.Start());
+	}
 	std::vector<std::pair<int32, BaseFloat> > deltaBIC;
 	int32 N = win.Length();
 	int32 d = features.NumCols(); // d: feature dimension 
