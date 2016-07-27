@@ -17,7 +17,7 @@ log_end(){
 
 set -e # exit on error
 
-data="toy_2"
+data="toy"
 run_mfcc(){
     log_start "Extract MFCC features"
 
@@ -54,14 +54,14 @@ make_ref(){
 
     log_end "Generate Reference Segments/Labels/RTTM files"
 }
-#make_ref $data 
+make_ref $data 
 
 test_ivectors(){
 
     x=$1
     diar/test_ivector_score.sh --nj 1 exp/extractor_1024 data/$x exp/ref/$x/labels exp/temp/test_ivectors
 }
-#test_ivectors $data
+test_ivectors $data
 
 
 run_changedetection() {
@@ -137,9 +137,9 @@ run_diarization(){
     nfiles=`local/split_data_dir.sh data/$datadir | cut -d ' ' -f 1`
     fileidx=1
     while [ $fileidx -le $nfiles ]; do
-        #make_ref ${datadir}_file_${fileidx}
-        #run_changedetection ${datadir}_file_${fileidx}
-        #test_ivectors ${datadir}_file_${fileidx}
+        make_ref ${datadir}_file_${fileidx}
+        run_changedetection ${datadir}_file_${fileidx}
+        test_ivectors ${datadir}_file_${fileidx}
         long=$(too_long ${datadir}_file_${fileidx})
         if [ $long -eq 0 ]; then
             run_glpkIlpTemplate ${datadir}_file_${fileidx}
@@ -149,9 +149,9 @@ run_diarization(){
         fileidx=$[$fileidx+1]
     done
     
-    cat exp/result_DER/${datadir}_file_*/diar_err | grep "OVERALL SPEAKER DIARIZATION ERROR"
+    grep "OVERALL SPEAKER DIARIZATION ERROR" exp/result_DER/${datadir}_file_*/diar_err 
 }
-run_diarization $data
+#run_diarization $data
 
 
 
