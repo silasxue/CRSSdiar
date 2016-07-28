@@ -17,7 +17,7 @@ log_end(){
 
 set -e # exit on error
 
-data="toy"
+data="toy_2"
 run_mfcc(){
     log_start "Extract MFCC features"
 
@@ -54,14 +54,14 @@ make_ref(){
 
     log_end "Generate Reference Segments/Labels/RTTM files"
 }
-make_ref $data 
+#make_ref $data 
 
 test_ivectors(){
 
     x=$1
-    diar/test_ivector_score.sh --nj 1 exp/extractor_1024 data/$x exp/ref/$x/labels exp/temp/test_ivectors
+    diar/test_ivector_score.sh --nj 1 exp/extractor_1024 data/$x exp/ref/$x/labels exp/temp/test_ivectors 
 }
-test_ivectors $data
+#test_ivectors $data
 
 
 run_changedetection() {
@@ -90,6 +90,16 @@ train_extractor(){
 }
 #train_extractor
 
+
+extract_background_ivectors(){
+    ubmdim=1024
+    ivdim=60
+    for x in dev; do
+        sid/extract_ivectors.sh exp/extractor_${ubmdim} data/$x exp/${x}.iv
+    done
+}
+#extract_background_ivectors
+
 too_long(){
     x=$1
     n_samples=`cat data/$x/wav.scp | cut -d ' ' -f 4 | perl -ne 'if(m/(\S+)/){print \`soxi -s $1\`}'`
@@ -99,11 +109,12 @@ too_long(){
     fi 
     echo "$is_too_long"
 }
+
 run_glpkIlpTemplate(){
     log_start "Generate GLPK Template of ILP problem "
 
     x=$1
-    diar/generate_ILP_template.sh --nj 1 --seg_min 50 --delta 30 \
+    diar/generate_ILP_template.sh --nj 1 --seg_min 50 --delta 10 \
       exp/extractor_1024 data/$x exp/change_detect/$x/segments exp/glpk_template/$x
 
     log_end "Generate GLPK Template of ILP problem "
@@ -140,18 +151,18 @@ run_diarization(){
         make_ref ${datadir}_file_${fileidx}
         run_changedetection ${datadir}_file_${fileidx}
         test_ivectors ${datadir}_file_${fileidx}
-        long=$(too_long ${datadir}_file_${fileidx})
-        if [ $long -eq 0 ]; then
-            run_glpkIlpTemplate ${datadir}_file_${fileidx}
-            run_glpk_Ilp ${datadir}_file_${fileidx}
-            run_DER ${datadir}_file_${fileidx}
-        fi
+        #long=$(too_long ${datadir}_file_${fileidx})
+        #if [ $long -eq 0 ]; then
+        #    run_glpkIlpTemplate ${datadir}_file_${fileidx}
+        #    run_glpk_Ilp ${datadir}_file_${fileidx}
+        #    run_DER ${datadir}_file_${fileidx}
+        #fi
         fileidx=$[$fileidx+1]
     done
     
     grep "OVERALL SPEAKER DIARIZATION ERROR" exp/result_DER/${datadir}_file_*/diar_err 
 }
-#run_diarization $data
+run_diarization $data
 
 
 

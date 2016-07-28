@@ -389,18 +389,28 @@ std::vector<std::string> returnNonEmptyFields(const std::vector<std::string>& fi
 }
 
 
-void computeDistanceMatrix(const std::vector< Vector<double> >& vectorList, Matrix<BaseFloat>& distanceMatrix) {
+void computeDistanceMatrix(const std::vector< Vector<double> >& vectorList, 
+							Matrix<BaseFloat>& distanceMatrix,
+							const std::vector< Vector<double> >& backgroundIvectors,
+							const std::vector< std::string >& backgroundIvectorLabels) {
 	distanceMatrix.Resize(vectorList.size(),vectorList.size());
 	// Calculate total mean and covariance:
 	Vector<double> vectorMean;
 	computeMean(vectorList, vectorMean);
-	SpMatrix<double> vectorCovariance = computeCovariance(vectorList, vectorMean);
+	//SpMatrix<double> vectorCovariance = computeCovariance(vectorList, vectorMean);
+	SpMatrix<double> withinCovariance = computeWithinCovariance(backgroundIvectors,
+																backgroundIvectorLabels);
 	for (size_t i=0; i<vectorList.size();i++){
 		for (size_t j=0;j<vectorList.size();j++){
 			if (i == j){
 				distanceMatrix(i,j) = 0;
 			}else{
-				distanceMatrix(i,j) = mahalanobisDistance(vectorList[i], vectorList[j], vectorCovariance);
+				//distanceMatrix(i,j) = mahalanobisDistance(vectorList[i], 
+				//											vectorList[j], 
+				//											vectorCovariance);
+				distanceMatrix(i,j) = conditionalBayesDistance(vectorList[i], 
+														 	   vectorList[j], 
+															   withinCovariance);
 			}
 		}
 	}
@@ -433,6 +443,13 @@ BaseFloat cosineDistance(const Vector<double>& v1, const Vector<double>& v2) {
 	 return dotProduct / (sqrt(norm1)*sqrt(norm2));  
 }
 
+BaseFloat conditionalBayesDistance(const Vector<double>& v1, const Vector<double>& v2, const SpMatrix<double>& withinCov) {
+	// Distance matrix suggested by Rouvier and Meignier (Odyssey 12). 
+	// This measure is computes a mahalanobis distance while assuming 
+	// a similar within-class covariance for all speakers in development data. 
+	// Different from regular mahalanobis distance in the covariance. 
+	return mahalanobisDistance(v1, v2, withinCov);
+}
 
 }
 

@@ -60,7 +60,7 @@ if [ $stage -le 0 ]; then
 	ark,s,cs:- ark:- \| scale-post ark:- $posterior_scale ark,t:$dir/post/posterior.JOB || exit 1;
 
   $cmd JOB=1:$nj $dir/log/generate_ILP.JOB.log \
-     writeTemplateILP --delta=$delta --seg_min=$seg_min $segment_dir/segments.scp "$feats" ark,s,cs:$dir/post/posterior.JOB $srcdir/final.ie $dir/glpk.template.ilp  || exit 1;
+     writeTemplateILP --delta=$delta --seg_min=$seg_min $segment_dir/segments.scp "$feats" ark,s,cs:$dir/post/posterior.JOB $srcdir/final.ie scp:exp/dev.iv/ivector.scp ark:data/dev/utt2spk $dir/glpk.template.ilp || exit 1;
 
 fi
 

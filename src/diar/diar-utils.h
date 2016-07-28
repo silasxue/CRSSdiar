@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <map>
 #include "util/common-utils.h"
 #include "matrix/matrix-lib.h"
 #include "hmm/posterior.h"
@@ -88,6 +89,60 @@ SpMatrix<T> computeCovariance(const std::vector< Vector<T> >& vectorOfFeatures,
 }
 
 
+template<class T>
+SpMatrix<T> computeWithinCovariance(const std::vector< Vector<T> >& vectorOfFeatures,
+									const std::vector<std::string>& vectorOfLabels) {
+	// Calculate: W  = (1/N) Sum_{s=1}_{S} Sum_{i=1}_{Ns} (w_i - m_s)((w_i - m_s)^T)
+	// inputs contain all development i-vectors and a vector of the same length
+	// that contains the corresponding speaker for each i-vector.
+	size_t N = vectorOfLabels.size(); 
+	if (N != vectorOfFeatures.size()) {
+		KALDI_ERR << "Number of labels " << N 
+					<< " does NOT match number of i-vectors "
+					<< vectorOfFeatures.size();  
+	}
+
+	// count number of instances for each speakers while 
+	// calculating means. 
+	// We don't want to use a class if we don't have 
+	// enough i-vectors for the corresponding speaker.
+	std::map< std::string, int > spkr_count;
+	std::map< std::string, Vector<T> > spkr_means;
+	for (size_t i = 0; i < N; i++) {
+		if (spkr_count.find(vectorOfLabels[i])==spkr_count.end()) {
+			spkr_count[vectorOfLabels[i]] = 1;
+			spkr_means[vectorOfLabels[i]] = vectorOfFeatures[i];
+		}else {
+			spkr_count[vectorOfLabels[i]]++;
+			spkr_means[vectorOfLabels[i]].AddVec(1., vectorOfFeatures[i]);
+		}
+	}
+
+	int32 ivecDim = spkr_means[vectorOfLabels[0]].Dim();
+	// We still need to divide the means by number of utterances for
+	// each speaker.
+	for (std::map<std::string,int>::iterator i = spkr_count.begin(); i != spkr_count.end(); i++) {
+		Vector<T> z(ivecDim);
+		z.CopyFromVec(spkr_means[i->first]);
+		spkr_means[i->first].SetZero();
+		spkr_means[i->first].AddVec(1./i->second, z);
+	}
+	
+	int NminSpkrs = 0; 
+	SpMatrix<T> W(ivecDim);
+	W.SetZero();
+	for (size_t i = 0; i < N; i++) {
+		if (spkr_count[vectorOfLabels[i]] > NminSpkrs) {
+			Vector<T> x(ivecDim);
+			x.CopyFromVec(vectorOfFeatures[i]);
+			x.AddVec(-1.,spkr_means[vectorOfLabels[i]]);
+			W.AddVec2(1./N,x);
+		}
+	}
+	return W;
+}
+
+
 template <class T>
 T logDetCovariance(Matrix<T>& data) {
 	// Calculates the covariance of data and returns its 
@@ -147,13 +202,20 @@ std::vector<std::string> split(const std::string& s, char delim);
 std::vector<std::string> returnNonEmptyFields(const std::vector<std::string>& fields);
 
 // compute distant matrix from i-vector collections, return distant matrix, and list of corresponding keys of ivectors
-void computeDistanceMatrix(const std::vector< Vector<double> >& vectorList, Matrix<BaseFloat>& distanceMatrix);
+void computeDistanceMatrix(const std::vector< Vector<double> >& vectorList, 
+							Matrix<BaseFloat>& distanceMatrix,
+							const std::vector< Vector<double> >& backgroundIvectors,
+							const std::vector< std::string >& backgroundIvectorLabels);
+
 
 // compute the Mahalanobis distance between two i-vectors
 BaseFloat mahalanobisDistance(const Vector<double>& v1, const Vector<double>& v2, const SpMatrix<double>& totalCov);
 
 // compute the cosine distance between two i-vectors
 BaseFloat cosineDistance(const Vector<double>& v1, const Vector<double>& v2);
+
+// Mahalanobis Distance using a averaged within-class covariance (assumes homoscedasticity)
+BaseFloat conditionalBayesDistance(const Vector<double>& v1, const Vector<double>& v2, const SpMatrix<double>& withinCov);
 
 }
 #endif
